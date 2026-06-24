@@ -517,6 +517,49 @@
       background: rgba(255,255,255,.42);
     }
 
+    .global-search {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      max-width: 780px;
+      margin-top: 22px;
+    }
+
+    .global-search input {
+      min-height: 54px;
+      border-radius: 999px;
+      padding-left: 20px;
+      background: rgba(255, 255, 255, .88);
+    }
+
+    .media-preview {
+      width: 100%;
+      min-height: 150px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.7), rgba(243,223,189,.55)),
+        radial-gradient(circle at 30% 25%, rgba(201,134,71,.18), transparent 10rem);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .rating {
+      letter-spacing: .08em;
+      color: var(--caramel-dark);
+      font-weight: 800;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 13px;
+    }
+
     @media (max-width: 1100px) {
       .app { grid-template-columns: 1fr; }
       .sidebar { position: relative; height: auto; }
@@ -558,15 +601,24 @@
         </div>
       </div>
       <nav class="nav" id="nav">
-        <button class="active" data-section="dashboard">Главная <span>01</span></button>
-        <button data-section="newRecipe">Новый рецепт <span>02</span></button>
-        <button data-section="recalc">Пересчёт <span>03</span></button>
-        <button data-section="recipes">Мои рецепты <span>04</span></button>
-        <button data-section="clients">Клиенты <span>05</span></button>
-        <button data-section="orders">Заказы <span>06</span></button>
-        <button data-section="stock">Склад <span>07</span></button>
-        <button data-section="knowledge">Секретики <span>08</span></button>
-        <button data-section="backup">Экспорт/импорт <span>09</span></button>
+        <button class="active" data-section="dashboard">🏠 Панель управления <span>01</span></button>
+        <button data-section="pastryLibrary">📖 Кондитерская библиотека <span>02</span></button>
+        <button data-section="culinaryLibrary">🍲 Кулинарная библиотека <span>03</span></button>
+        <button data-section="recipes">🍰 Рецепты <span>04</span></button>
+        <button data-section="newRecipe">🧮 Калькулятор себестоимости <span>05</span></button>
+        <button data-section="recalc">↔ Пересчёт рецепта <span>06</span></button>
+        <button data-section="lab">🧪 Моя лаборатория <span>07</span></button>
+        <button data-section="clients">👩 Клиенты <span>08</span></button>
+        <button data-section="orders">📦 Заказы <span>09</span></button>
+        <button data-section="stock">🛒 Склад <span>10</span></button>
+        <button data-section="purchases">📋 Закупки <span>11</span></button>
+        <button data-section="knowledge">📚 База знаний <span>12</span></button>
+        <button data-section="gallery">📸 Галерея работ <span>13</span></button>
+        <button data-section="portfolio">🏆 Портфолио <span>14</span></button>
+        <button data-section="ideas">💡 Банк идей <span>15</span></button>
+        <button data-section="analytics">📊 Аналитика <span>16</span></button>
+        <button data-section="settings">⚙ Настройки <span>17</span></button>
+        <button data-section="backup">Экспорт/импорт <span>18</span></button>
       </nav>
       <div class="sidebar-note">
         Все данные сохраняются только в этом браузере. Регулярно делайте экспорт JSON, чтобы не потерять рецепты, клиентов и заказы.
@@ -575,14 +627,22 @@
 
     <main>
       <header class="hero no-print">
-        <span class="eyebrow">себестоимость • CRM • склад • заказы</span>
-        <h2>Премиальная рабочая тетрадь кондитера</h2>
-        <p>Считайте рецепты, храните клиентскую историю, контролируйте заказы и закупки в одном локальном файле без сервера и регистрации.</p>
+        <span class="eyebrow">себестоимость • библиотеки • CRM • аналитика</span>
+        <h2>Премиальная локальная система кондитера</h2>
+        <p>Считайте рецепты, храните книги и техкарты, ведите клиентов, заказы, склад, идеи и портфолио в одном HTML-файле без сервера.</p>
+        <div class="global-search">
+          <input id="globalSearch" placeholder="Глобальный поиск: рецепты, книги, ингредиенты, клиенты, заказы, заметки, теги, авторы">
+          <button class="btn secondary" id="clearGlobalSearch" type="button">Очистить</button>
+        </div>
       </header>
 
       <section class="section active" id="dashboard">
         <div class="grid" id="stats"></div>
         <div class="grid" style="margin-top:18px">
+          <div class="card span-12" id="globalSearchCard" style="display:none">
+            <h3>Результаты глобального поиска</h3>
+            <div class="list" id="globalSearchResults"></div>
+          </div>
           <div class="card span-6">
             <h3>Ближайшие заказы</h3>
             <div class="list" id="upcomingOrders"></div>
@@ -590,6 +650,80 @@
           <div class="card span-6">
             <h3>Что требует внимания</h3>
             <div class="list" id="dashboardAlerts"></div>
+          </div>
+          <div class="card span-6">
+            <h3>Последние материалы</h3>
+            <div class="list" id="recentMaterials"></div>
+          </div>
+          <div class="card span-6">
+            <h3>Последние рецепты</h3>
+            <div class="list" id="recentRecipes"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="pastryLibrary">
+        <div class="grid">
+          <form class="card span-5 library-form" id="pastryLibraryForm" data-type="pastry">
+            <h3>Кондитерская библиотека</h3>
+            <div class="row">
+              <div class="field col-6"><label>Название</label><input name="title" required></div>
+              <div class="field col-6"><label>Автор</label><input name="author"></div>
+              <div class="field col-6"><label>Тип материала</label><select name="materialType"><option>книга</option><option>PDF</option><option>TXT</option><option>DOCX</option><option>изображение</option><option>технологическая карта</option><option>отдельный рецепт</option></select></div>
+              <div class="field col-6"><label>Категория</label><select name="category" id="pastryCategory"></select></div>
+              <div class="field col-6"><label>Обложка</label><input name="cover" type="file" accept="image/*"></div>
+              <div class="field col-6"><label>Фото блюда</label><input name="dishPhoto" type="file" accept="image/*"></div>
+              <div class="field col-12"><label>Файл книги / техкарты</label><input name="file" type="file" accept=".pdf,.txt,.docx,.jpg,.jpeg,.png,.webp,image/*,application/pdf,text/plain"></div>
+              <div class="field col-6"><label>Источник</label><input name="source"></div>
+              <div class="field col-6"><label>Ссылка</label><input name="link" type="url"></div>
+              <div class="field col-6"><label>Теги</label><input name="tags" placeholder="фисташка, мусс, ягоды"></div>
+              <div class="field col-3"><label>Рейтинг</label><select name="rating"><option value="0">без оценки</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+              <div class="field col-3"><label>Проверено</label><select name="checked"><option value="">нет</option><option value="yes">да</option></select></div>
+              <div class="field col-6"><label>Что понравилось</label><textarea name="liked"></textarea></div>
+              <div class="field col-6"><label>Что изменить</label><textarea name="change"></textarea></div>
+              <div class="field col-12"><label>Мои комментарии и доработки</label><textarea name="notes"></textarea></div>
+            </div>
+            <button class="btn" type="submit">Сохранить материал</button>
+          </form>
+          <div class="card span-7">
+            <div class="item-head">
+              <h3>Материалы для десертов</h3>
+              <input id="pastryLibrarySearch" placeholder="Поиск по названию, автору, тегам, заметкам">
+            </div>
+            <div class="list" id="pastryLibraryList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="culinaryLibrary">
+        <div class="grid">
+          <form class="card span-5 library-form" id="culinaryLibraryForm" data-type="culinary">
+            <h3>Кулинарная библиотека</h3>
+            <div class="row">
+              <div class="field col-6"><label>Название</label><input name="title" required></div>
+              <div class="field col-6"><label>Автор</label><input name="author"></div>
+              <div class="field col-6"><label>Тип материала</label><select name="materialType"><option>книга</option><option>PDF</option><option>TXT</option><option>DOCX</option><option>изображение</option><option>рецепт</option></select></div>
+              <div class="field col-6"><label>Категория</label><select name="category" id="culinaryCategory"></select></div>
+              <div class="field col-6"><label>Обложка</label><input name="cover" type="file" accept="image/*"></div>
+              <div class="field col-6"><label>Фото блюда</label><input name="dishPhoto" type="file" accept="image/*"></div>
+              <div class="field col-12"><label>Файл книги / рецепта</label><input name="file" type="file" accept=".pdf,.txt,.docx,.jpg,.jpeg,.png,.webp,image/*,application/pdf,text/plain"></div>
+              <div class="field col-6"><label>Источник</label><input name="source"></div>
+              <div class="field col-6"><label>Ссылка</label><input name="link" type="url"></div>
+              <div class="field col-6"><label>Теги</label><input name="tags"></div>
+              <div class="field col-3"><label>Рейтинг</label><select name="rating"><option value="0">без оценки</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+              <div class="field col-3"><label>Проверено</label><select name="checked"><option value="">нет</option><option value="yes">да</option></select></div>
+              <div class="field col-6"><label>Что понравилось</label><textarea name="liked"></textarea></div>
+              <div class="field col-6"><label>Что изменить</label><textarea name="change"></textarea></div>
+              <div class="field col-12"><label>Мои комментарии и доработки</label><textarea name="notes"></textarea></div>
+            </div>
+            <button class="btn" type="submit">Сохранить материал</button>
+          </form>
+          <div class="card span-7">
+            <div class="item-head">
+              <h3>Кулинарные книги и рецепты</h3>
+              <input id="culinaryLibrarySearch" placeholder="Поиск по названию, автору, тегам, заметкам">
+            </div>
+            <div class="list" id="culinaryLibraryList"></div>
           </div>
         </div>
       </section>
@@ -610,7 +744,16 @@
               <div class="field col-3"><label>Диаметр / длина, см</label><input name="length" type="number" min="0" step="0.1"></div>
               <div class="field col-3"><label>Ширина, см</label><input name="width" type="number" min="0" step="0.1"></div>
               <div class="field col-3"><label>Высота, см</label><input name="height" type="number" min="0" step="0.1"></div>
+              <div class="field col-3"><label>Срок хранения</label><input name="shelfLife" placeholder="Например, 72 часа"></div>
+              <div class="field col-3"><label>Температура хранения</label><input name="storageTemp" placeholder="+2...+6 °C"></div>
+              <div class="field col-3"><label>Срок заморозки</label><input name="freezeLife" placeholder="до 30 дней"></div>
+              <div class="field col-3"><label>Заморозка</label><select name="freezable"><option value="">не указано</option><option value="yes">можно</option><option value="no">нельзя</option></select></div>
+              <div class="field col-3"><label>Время приготовления</label><input name="cookTime" placeholder="4 часа + ночь"></div>
+              <div class="field col-3"><label>Сложность</label><select name="difficulty"><option>простая</option><option>средняя</option><option>сложная</option><option>профессиональная</option></select></div>
+              <div class="field col-3"><label>Рейтинг</label><select name="rating"><option value="0">без оценки</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+              <div class="field col-3"><label>Проверено мной</label><select name="checked"><option value="">нет</option><option value="yes">да</option></select></div>
               <div class="field col-6"><label>Заметки</label><textarea name="notes" placeholder="Сборка, хранение, нюансы декора"></textarea></div>
+              <div class="field col-6"><label>Мои доработки рецепта</label><textarea name="improvements" placeholder="Что понравилось, что изменить, авторские правки"></textarea></div>
             </div>
           </div>
 
@@ -741,6 +884,7 @@
               <div class="field col-3"><label>Дата заказа</label><input name="orderDate" type="date"></div>
               <div class="field col-3"><label>Дата выдачи</label><input name="dueDate" type="date"></div>
               <div class="field col-3"><label>Время выдачи</label><input name="dueTime" type="time"></div>
+              <div class="field col-3"><label>Повод</label><input name="occasion" placeholder="День рождения, свадьба"></div>
               <div class="field col-9"><label>Рецепт</label><select name="recipeId" id="orderRecipe"></select></div>
               <div class="field col-3"><label>Вес, г</label><input name="weight" type="number" min="0"></div>
               <div class="field col-5"><label>Начинка</label><input name="filling"></div>
@@ -804,10 +948,145 @@
         </div>
       </section>
 
+      <section class="section" id="purchases">
+        <div class="grid">
+          <div class="card span-5">
+            <h3>Архитектура закупок</h3>
+            <p class="muted">Ручные закупки уже сохраняются в localStorage. Автоматический список формируется из активных заказов и подготовлен для будущего расширения по складу и рецептам.</p>
+            <button class="btn secondary" type="button" onclick="setSection('stock')">Добавить закупку вручную</button>
+          </div>
+          <div class="card span-7">
+            <h3>Список закупок</h3>
+            <div class="list" id="purchaseSectionList"></div>
+          </div>
+        </div>
+      </section>
+
       <section class="section" id="knowledge">
         <div class="card">
           <h3>Секретики кондитера</h3>
           <div class="grid" id="knowledgeGrid"></div>
+        </div>
+      </section>
+
+      <section class="section" id="lab">
+        <div class="grid">
+          <form class="card span-5" id="labForm">
+            <h3>Моя лаборатория</h3>
+            <div class="row">
+              <div class="field col-6"><label>Название эксперимента</label><input name="title" required></div>
+              <div class="field col-6"><label>Фото</label><input name="photo" type="file" accept="image/*"></div>
+              <div class="field col-12"><label>Исходный рецепт</label><select name="recipeId" id="labRecipe"></select></div>
+              <div class="field col-12"><label>Цель эксперимента</label><textarea name="goal"></textarea></div>
+              <div class="field col-6"><label>Версии рецепта</label><textarea name="versions" placeholder="v1, v2, v3..."></textarea></div>
+              <div class="field col-6"><label>Изменения</label><textarea name="changes"></textarea></div>
+              <div class="field col-6"><label>Результат</label><textarea name="result"></textarea></div>
+              <div class="field col-6"><label>Отзывы дегустаторов</label><textarea name="feedback"></textarea></div>
+              <div class="field col-8"><label>Выводы</label><textarea name="conclusion"></textarea></div>
+              <div class="field col-2"><label>Рейтинг</label><select name="rating"><option value="0">-</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+              <div class="field col-2"><label>Авторский</label><select name="isAuthor"><option value="">нет</option><option value="yes">да</option></select></div>
+            </div>
+            <button class="btn" type="submit">Сохранить эксперимент</button>
+          </form>
+          <div class="card span-7">
+            <h3>Эксперименты и версии</h3>
+            <div class="list" id="labList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="gallery">
+        <div class="grid">
+          <form class="card span-5" id="galleryForm">
+            <h3>Галерея работ</h3>
+            <div class="row">
+              <div class="field col-6"><label>Название десерта</label><input name="title" required></div>
+              <div class="field col-6"><label>Фото</label><input name="photo" type="file" accept="image/*"></div>
+              <div class="field col-6"><label>Клиент</label><select name="clientId" id="galleryClient"></select></div>
+              <div class="field col-6"><label>Дата</label><input name="date" type="date"></div>
+              <div class="field col-6"><label>Теги</label><input name="tags" placeholder="свадебный, ягоды, крем"></div>
+              <div class="field col-6"><label>В портфолио</label><select name="portfolio"><option value="">нет</option><option value="yes">да</option></select></div>
+              <div class="field col-12"><label>Комментарии</label><textarea name="comments"></textarea></div>
+            </div>
+            <button class="btn" type="submit">Добавить работу</button>
+          </form>
+          <div class="card span-7">
+            <h3>Все работы</h3>
+            <div class="list" id="galleryList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="portfolio">
+        <div class="grid">
+          <div class="card span-4">
+            <h3>Лучшие работы</h3>
+            <div class="list" id="portfolioWorks"></div>
+          </div>
+          <div class="card span-4">
+            <h3>Любимые рецепты</h3>
+            <div class="list" id="favoriteRecipes"></div>
+          </div>
+          <div class="card span-4">
+            <h3>Авторские рецепты</h3>
+            <div class="list" id="authorRecipes"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="ideas">
+        <div class="grid">
+          <form class="card span-5" id="ideaForm">
+            <h3>Банк идей</h3>
+            <div class="row">
+              <div class="field col-6"><label>Название идеи</label><input name="title" required></div>
+              <div class="field col-6"><label>Фотография</label><input name="photo" type="file" accept="image/*"></div>
+              <div class="field col-6"><label>Ссылка</label><input name="link" type="url"></div>
+              <div class="field col-6"><label>Тип идеи</label><select name="type"><option>декор</option><option>начинка</option><option>упаковка</option><option>подача</option><option>другое</option></select></div>
+              <div class="field col-12"><label>Теги</label><input name="tags"></div>
+              <div class="field col-12"><label>Описание</label><textarea name="notes"></textarea></div>
+            </div>
+            <button class="btn" type="submit">Сохранить идею</button>
+          </form>
+          <div class="card span-7">
+            <div class="item-head">
+              <h3>Идеи и вдохновение</h3>
+              <input id="ideaSearch" placeholder="Поиск по тегам, ссылкам и заметкам">
+            </div>
+            <div class="list" id="ideaList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="analytics">
+        <div class="grid">
+          <div class="card span-12">
+            <h3>Аналитика бизнеса</h3>
+            <div class="grid" id="analyticsStats"></div>
+          </div>
+          <div class="card span-4"><h3>Самые прибыльные рецепты</h3><div class="list" id="profitableRecipes"></div></div>
+          <div class="card span-4"><h3>Популярные рецепты</h3><div class="list" id="popularRecipes"></div></div>
+          <div class="card span-4"><h3>Лучшие клиенты</h3><div class="list" id="bestClients"></div></div>
+          <div class="card span-12"><h3>Последние добавленные материалы</h3><div class="list" id="analyticsRecent"></div></div>
+        </div>
+      </section>
+
+      <section class="section" id="settings">
+        <div class="grid">
+          <div class="card span-6">
+            <h3>Подготовка к AI</h3>
+            <p class="muted">Структура данных уже хранит файлы, теги, заметки, доработки, рейтинг, признаки избранного и AI-статусы. Внешние AI-функции пока не подключены, поэтому кнопки показывают заглушку.</p>
+            <div class="actions">
+              <button class="btn secondary" type="button" onclick="aiComingSoon()">AI-поиск по библиотеке</button>
+              <button class="btn secondary" type="button" onclick="aiComingSoon()">AI-консультант кондитера</button>
+              <button class="btn secondary" type="button" onclick="aiComingSoon()">Извлечь ингредиенты</button>
+            </div>
+          </div>
+          <div class="card span-6">
+            <h3>Локальные настройки</h3>
+            <p class="muted">Приложение работает без сервера. Все данные находятся в localStorage этого браузера, включая загруженные изображения и файлы.</p>
+            <div class="item"><strong>Валюта:</strong> рубли · <strong>Единицы:</strong> г, кг, мл, л, шт, час, км</div>
+          </div>
         </div>
       </section>
 
@@ -851,6 +1130,8 @@
     const ingredientNames = ["Мука", "Сахар", "Сливки", "Масло сливочное", "Шоколад", "Яйца", "Молоко", "Ягоды", "Творожный сыр", "Желатин", "Какао", "Орехи", "Соль", "Ваниль", "Другое"];
     const expenseNames = ["упаковка", "коробка", "подложка", "лента", "шпажки", "трубочки", "пергамент", "труд", "доставка", "электричество", "прочее"];
     const checklistItems = ["клиент выбран", "дата подтверждена", "вес подтверждён", "вкус подтверждён", "декор подтверждён", "аллергии проверены", "упаковка учтена", "доставка согласована", "предоплата получена", "остаток оплаты рассчитан", "фото после выдачи добавлено", "отзыв записан"];
+    const pastryCategories = ["Торты", "Бенто", "Капкейки", "Муссовые десерты", "Пирожные", "Эклеры", "Макарон", "Моти", "Чизкейки", "Тарты", "Печенье", "Конфеты", "Зефир", "Мармелад", "Шоколад", "Кремы", "Начинки", "Бисквиты", "Глазури", "Ганаши", "Технологические карты", "Декор"];
+    const culinaryCategories = ["Завтраки", "Салаты", "Супы", "Горячие блюда", "Гарниры", "Закуски", "Соусы", "Выпечка", "Хлеб", "Напитки", "Заготовки", "Национальная кухня", "Диетические блюда", "Детское меню", "Праздничное меню"];
     const knowledge = [
       ["Торты", "Для стабильной сборки считайте не только продукты, но и подложку, коробку, ленту, электричество и время на декор."],
       ["Ярусные торты", "Каждый ярус ставьте на отдельную подложку, используйте опоры и заранее проверяйте высоту коробки."],
@@ -869,14 +1150,30 @@
     let data = loadData();
     let currentRecipeId = null;
 
+    function defaultData() {
+      return {
+        recipes: [],
+        clients: [],
+        orders: [],
+        stock: [],
+        purchases: [],
+        pastryLibrary: [],
+        culinaryLibrary: [],
+        lab: [],
+        gallery: [],
+        ideas: [],
+        settings: { aiReady: true }
+      };
+    }
+
     function loadData() {
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (saved) return { recipes: [], clients: [], orders: [], stock: [], purchases: [], ...saved };
+        if (saved) return { ...defaultData(), ...saved };
       } catch (error) {
         console.warn("Не удалось прочитать localStorage", error);
       }
-      return { recipes: [], clients: [], orders: [], stock: [], purchases: [] };
+      return defaultData();
     }
 
     function saveData() {
@@ -918,8 +1215,28 @@
       });
     }
 
+    function readUpload(input) {
+      return new Promise(resolve => {
+        const file = input.files && input.files[0];
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, type: file.type || "file", size: file.size, data: reader.result });
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
     function getFormData(form) {
       return Object.fromEntries(new FormData(form).entries());
+    }
+
+    function stars(value) {
+      const rating = Math.max(0, Math.min(5, number(value)));
+      return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(0, 5 - rating);
+    }
+
+    function containsText(source, query) {
+      return JSON.stringify(source || {}).toLowerCase().includes(query);
     }
 
     function setSection(id) {
@@ -1199,7 +1516,8 @@
               <div><h4>${escapeHtml(getClientName(order.clientId))}</h4><span class="muted">${escapeHtml(order.dueDate || "дата не указана")} ${escapeHtml(order.dueTime || "")}</span></div>
               <span class="pill">${escapeHtml(order.status)}</span>
             </div>
-            <p>${escapeHtml(getRecipeName(order.recipeId))} · ${number(order.weight)} г · ${escapeHtml(order.filling || "")} · ${escapeHtml(order.decor || "")}</p>
+            ${order.reference ? `<img class="thumb" style="width:100%;height:180px;margin-bottom:12px" src="${order.reference}" alt="">` : ""}
+            <p>${escapeHtml(getRecipeName(order.recipeId))} · ${number(order.weight)} г · ${escapeHtml(order.occasion || "повод не указан")} · ${escapeHtml(order.filling || "")} · ${escapeHtml(order.decor || "")}</p>
             <p>Стоимость: <span class="money">${money(order.price)}</span> · Себестоимость: ${money(order.cost)} · Прибыль: <span class="${profit >= 0 ? "success" : "warning"}">${money(profit)}</span> · Остаток оплаты: ${money(rest)}</p>
             <div class="actions"><button class="btn secondary" onclick="printHtml(orderPrintHtml('${order.id}'))">Печать заказа</button></div>
           </div>`;
@@ -1234,6 +1552,132 @@
         return `<div class="item"><div class="item-head"><strong>${escapeHtml(name)}</strong><span class="pill">авто</span></div><span class="muted">Нужно примерно ${qty.toFixed(1)} ${escapeHtml(unit)} для активных заказов</span></div>`;
       });
       document.getElementById("purchaseList").innerHTML = manualRows.length || purchaseRows.length ? manualRows.concat(purchaseRows).join("") : `<div class="empty">Закупок пока нет: добавьте вручную или создайте активные заказы.</div>`;
+      document.getElementById("purchaseSectionList").innerHTML = document.getElementById("purchaseList").innerHTML;
+    }
+
+    function materialCard(item, collection) {
+      const cover = item.cover || item.dishPhoto;
+      return `
+        <div class="item recipe-card">
+          ${cover ? `<img class="thumb" src="${cover}" alt="">` : `<div class="thumb">${escapeHtml((item.materialType || "материал").toUpperCase())}</div>`}
+          <div>
+            <div class="item-head">
+              <div>
+                <h4>${escapeHtml(item.title)}</h4>
+                <span class="pill">${escapeHtml(item.category || "без категории")}</span>
+                <span class="pill">${escapeHtml(item.materialType || "материал")}</span>
+                ${item.favorite === "yes" ? `<span class="pill">избранное</span>` : ""}
+              </div>
+              <span class="rating">${stars(item.rating)}</span>
+            </div>
+            <p class="muted">${escapeHtml(item.author || "Автор не указан")} · ${escapeHtml(item.source || "источник не указан")} · добавлено ${escapeHtml(item.addedAt || "")}</p>
+            <p>${escapeHtml([item.tags, item.notes, item.liked, item.change].filter(Boolean).join(" · "))}</p>
+            <div class="actions">
+              ${item.file ? `<a class="btn secondary" href="${item.file.data}" download="${escapeHtml(item.file.name)}">Открыть</a>` : ""}
+              <button class="btn secondary" type="button" onclick="toggleFavorite('${collection}','${item.id}')">${item.favorite === "yes" ? "Убрать из избранного" : "В избранное"}</button>
+              <button class="btn secondary" type="button" onclick="createCalcFromMaterial('${collection}','${item.id}')">Создать калькуляцию</button>
+              <button class="btn secondary" type="button" onclick="aiParseBook('${collection}','${item.id}')">Разобрать книгу</button>
+              <button class="btn danger" type="button" onclick="deleteMaterial('${collection}','${item.id}')">Удалить</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderLibrary(type) {
+      const key = type === "pastry" ? "pastryLibrary" : "culinaryLibrary";
+      const searchId = type === "pastry" ? "pastryLibrarySearch" : "culinaryLibrarySearch";
+      const listId = type === "pastry" ? "pastryLibraryList" : "culinaryLibraryList";
+      const query = document.getElementById(searchId).value.toLowerCase();
+      const rows = data[key].filter(item => containsText(item, query));
+      document.getElementById(listId).innerHTML = rows.length ? rows.map(item => materialCard(item, key)).join("") : `<div class="empty">Материалов пока нет.</div>`;
+    }
+
+    function renderLab() {
+      document.getElementById("labList").innerHTML = data.lab.length ? data.lab.map(item => `
+        <div class="item recipe-card">
+          ${item.photo ? `<img class="thumb" src="${item.photo}" alt="">` : `<div class="thumb">LAB</div>`}
+          <div>
+            <div class="item-head"><div><h4>${escapeHtml(item.title)}</h4><span class="pill">${escapeHtml(getRecipeName(item.recipeId))}</span>${item.isAuthor === "yes" ? `<span class="pill">авторский рецепт</span>` : ""}</div><span class="rating">${stars(item.rating)}</span></div>
+            <p><strong>Цель:</strong> ${escapeHtml(item.goal || "не указана")}</p>
+            <p class="muted">${escapeHtml([item.versions, item.changes, item.result, item.feedback, item.conclusion].filter(Boolean).join(" · "))}</p>
+            <div class="actions"><button class="btn secondary" type="button" onclick="saveExperimentAsRecipe('${item.id}')">Сохранить как новый рецепт</button></div>
+          </div>
+        </div>`).join("") : `<div class="empty">Экспериментов пока нет.</div>`;
+    }
+
+    function renderGallery() {
+      document.getElementById("galleryList").innerHTML = data.gallery.length ? data.gallery.map(item => `
+        <div class="item recipe-card">
+          ${item.photo ? `<img class="thumb" src="${item.photo}" alt="">` : `<div class="thumb">ФОТО</div>`}
+          <div>
+            <div class="item-head"><div><h4>${escapeHtml(item.title)}</h4><span class="pill">${escapeHtml(getClientName(item.clientId))}</span><span class="pill">${escapeHtml(item.date || "без даты")}</span>${item.portfolio === "yes" ? `<span class="pill">портфолио</span>` : ""}</div></div>
+            <p>${escapeHtml(item.comments || "")}</p><p class="muted">${escapeHtml(item.tags || "")}</p>
+          </div>
+        </div>`).join("") : `<div class="empty">Галерея пока пустая.</div>`;
+    }
+
+    function renderIdeas() {
+      const query = document.getElementById("ideaSearch").value.toLowerCase();
+      const rows = data.ideas.filter(item => containsText(item, query));
+      document.getElementById("ideaList").innerHTML = rows.length ? rows.map(item => `
+        <div class="item recipe-card">
+          ${item.photo ? `<img class="thumb" src="${item.photo}" alt="">` : `<div class="thumb">IDEA</div>`}
+          <div><div class="item-head"><div><h4>${escapeHtml(item.title)}</h4><span class="pill">${escapeHtml(item.type)}</span></div></div>
+          ${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noreferrer">Источник идеи</a>` : ""}
+          <p>${escapeHtml(item.notes || "")}</p><p class="muted">${escapeHtml(item.tags || "")}</p></div>
+        </div>`).join("") : `<div class="empty">Идей пока нет.</div>`;
+    }
+
+    function renderPortfolio() {
+      const bestWorks = data.gallery.filter(item => item.portfolio === "yes");
+      const favoriteRecipes = data.recipes.filter(item => item.checked === "yes" || number(item.rating) >= 5);
+      const authorRecipes = data.lab.filter(item => item.isAuthor === "yes");
+      document.getElementById("portfolioWorks").innerHTML = bestWorks.length ? bestWorks.map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(getClientName(item.clientId))} · ${escapeHtml(item.date || "")}</span></div>`).join("") : `<div class="empty">Отметьте работы для портфолио в галерее.</div>`;
+      document.getElementById("favoriteRecipes").innerHTML = favoriteRecipes.length ? favoriteRecipes.map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="rating">${stars(item.rating)}</span></div>`).join("") : `<div class="empty">Рецепты с рейтингом 5 или проверкой появятся здесь.</div>`;
+      document.getElementById("authorRecipes").innerHTML = authorRecipes.length ? authorRecipes.map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.conclusion || "")}</span></div>`).join("") : `<div class="empty">Авторские эксперименты появятся здесь.</div>`;
+    }
+
+    function renderGlobalSearch() {
+      const query = document.getElementById("globalSearch").value.trim().toLowerCase();
+      const card = document.getElementById("globalSearchCard");
+      if (!query) {
+        card.style.display = "none";
+        document.getElementById("globalSearchResults").innerHTML = "";
+        return;
+      }
+      const sources = [
+        ["Рецепт", data.recipes, item => item.title],
+        ["Кондитерская библиотека", data.pastryLibrary, item => item.title],
+        ["Кулинарная библиотека", data.culinaryLibrary, item => item.title],
+        ["Клиент", data.clients, item => item.name],
+        ["Заказ", data.orders, item => `${getClientName(item.clientId)} · ${getRecipeName(item.recipeId)}`],
+        ["Склад", data.stock, item => item.name],
+        ["Закупка", data.purchases, item => item.name],
+        ["Лаборатория", data.lab, item => item.title],
+        ["Галерея", data.gallery, item => item.title],
+        ["Идея", data.ideas, item => item.title]
+      ];
+      const results = sources.flatMap(([label, rows, titleFn]) => rows.filter(item => containsText(item, query)).map(item => ({ label, title: titleFn(item), item })));
+      card.style.display = "block";
+      document.getElementById("globalSearchResults").innerHTML = results.length ? results.slice(0, 30).map(result => `<div class="item"><span class="pill">${result.label}</span><h4>${escapeHtml(result.title || "Без названия")}</h4><p class="muted">${escapeHtml(JSON.stringify(result.item).slice(0, 260))}</p></div>`).join("") : `<div class="empty">Ничего не найдено.</div>`;
+    }
+
+    function renderAnalytics() {
+      const revenue = data.orders.filter(o => o.status !== "отменён").reduce((sum, order) => sum + number(order.price), 0);
+      const cost = data.orders.filter(o => o.status !== "отменён").reduce((sum, order) => sum + number(order.cost), 0);
+      const profit = revenue - cost;
+      const books = data.pastryLibrary.length + data.culinaryLibrary.length;
+      const stats = [["Рецептов", data.recipes.length], ["Книг и материалов", books], ["Клиентов", data.clients.length], ["Заказов", data.orders.length], ["Выручка", money(revenue)], ["Прибыль", money(profit)], ["Средний чек", money(data.orders.length ? revenue / data.orders.length : 0)], ["Проверенных рецептов", data.recipes.filter(r => r.checked === "yes").length]];
+      document.getElementById("analyticsStats").innerHTML = stats.map(([label, value]) => `<div class="card span-3 stat"><small>${label}</small><strong>${value}</strong></div>`).join("");
+      const recipeProfit = [...data.recipes].sort((a, b) => number((b.totals || {}).profit) - number((a.totals || {}).profit)).slice(0, 5);
+      document.getElementById("profitableRecipes").innerHTML = recipeProfit.length ? recipeProfit.map(r => `<div class="item"><strong>${escapeHtml(r.title)}</strong><br><span class="money">${money((r.totals || {}).profit)}</span></div>`).join("") : `<div class="empty">Нет данных.</div>`;
+      const popularity = data.orders.reduce((acc, order) => ((acc[order.recipeId] = (acc[order.recipeId] || 0) + 1), acc), {});
+      const popular = Object.entries(popularity).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      document.getElementById("popularRecipes").innerHTML = popular.length ? popular.map(([id, count]) => `<div class="item"><strong>${escapeHtml(getRecipeName(id))}</strong><br><span class="muted">${count} заказов</span></div>`).join("") : `<div class="empty">Нет заказов.</div>`;
+      const clients = data.clients.map(client => ({ client, revenue: data.orders.filter(o => o.clientId === client.id).reduce((sum, o) => sum + number(o.price), 0) })).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+      document.getElementById("bestClients").innerHTML = clients.length ? clients.map(({ client, revenue }) => `<div class="item"><strong>${escapeHtml(client.name)}</strong><br><span class="money">${money(revenue)}</span></div>`).join("") : `<div class="empty">Нет клиентов.</div>`;
+      const recent = [...data.pastryLibrary, ...data.culinaryLibrary].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 8);
+      document.getElementById("analyticsRecent").innerHTML = recent.length ? recent.map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.author || "")} · ${escapeHtml(item.category || "")}</span></div>`).join("") : `<div class="empty">Материалов пока нет.</div>`;
     }
 
     function renderDashboard() {
@@ -1241,12 +1685,15 @@
       const cost = data.orders.filter(o => o.status !== "отменён").reduce((sum, order) => sum + number(order.cost), 0);
       const profit = revenue - cost;
       const avg = data.orders.length ? revenue / data.orders.length : 0;
+      const books = data.pastryLibrary.length + data.culinaryLibrary.length;
       const stats = [
         ["Рецептов", data.recipes.length],
+        ["Книг", books],
         ["Клиентов", data.clients.length],
         ["Заказов", data.orders.length],
+        ["Проверенных", data.recipes.filter(recipe => recipe.checked === "yes").length],
+        ["Избранных", data.recipes.filter(recipe => number(recipe.rating) >= 5 || recipe.checked === "yes").length + data.pastryLibrary.concat(data.culinaryLibrary).filter(item => item.favorite === "yes").length],
         ["Выручка", money(revenue)],
-        ["Себестоимость", money(cost)],
         ["Прибыль", money(profit)],
         ["Средний чек", money(avg)],
         ["Склад", `${data.stock.filter(i => number(i.qty) <= number(i.min)).length} тревог`]
@@ -1260,6 +1707,9 @@
         ...data.clients.filter(c => String(c.importantDates || "").trim()).slice(0, 3).map(c => `Важные даты: ${c.name} — ${c.importantDates}`)
       ];
       document.getElementById("dashboardAlerts").innerHTML = alerts.length ? alerts.map(alert => `<div class="item">${escapeHtml(alert)}</div>`).join("") : `<div class="empty">Критичных предупреждений нет.</div>`;
+      const recentMaterials = [...data.pastryLibrary, ...data.culinaryLibrary].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 5);
+      document.getElementById("recentMaterials").innerHTML = recentMaterials.length ? recentMaterials.map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.category || "")} · ${escapeHtml(item.author || "")}</span></div>`).join("") : `<div class="empty">Материалов пока нет.</div>`;
+      document.getElementById("recentRecipes").innerHTML = data.recipes.slice(0, 5).length ? data.recipes.slice(0, 5).map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.category || "")} · ${money((item.totals || {}).price)}</span></div>`).join("") : `<div class="empty">Рецептов пока нет.</div>`;
     }
 
     function isDateSoon(date) {
@@ -1283,10 +1733,12 @@
 
     function renderSelects() {
       fillSelect(document.getElementById("recalcRecipe"), data.recipes, "Выберите рецепт", r => r.title);
-      fillSelect(document.getElementById("orderRecipe"), data.recipes, "Без рецепта", r => `${r.title} · ${money(r.totals.price)}`);
+      fillSelect(document.getElementById("orderRecipe"), data.recipes, "Без рецепта", r => `${r.title} · ${money((r.totals || {}).price)}`);
       fillSelect(document.getElementById("orderClient"), data.clients, "Без клиента", c => c.name);
       fillSelect(document.getElementById("printRecipe"), data.recipes, "Выберите рецепт", r => r.title);
       fillSelect(document.getElementById("printOrder"), data.orders, "Выберите заказ", o => `${getClientName(o.clientId)} · ${o.dueDate || "без даты"}`);
+      fillSelect(document.getElementById("labRecipe"), data.recipes, "Без исходного рецепта", r => r.title);
+      fillSelect(document.getElementById("galleryClient"), data.clients, "Без клиента", c => c.name);
     }
 
     function getRecipeName(id) {
@@ -1300,10 +1752,18 @@
     function renderAll() {
       renderDashboard();
       renderRecipes();
+      renderLibrary("pastry");
+      renderLibrary("culinary");
       renderClients();
       renderOrders();
       renderStock();
       renderKnowledge();
+      renderLab();
+      renderGallery();
+      renderIdeas();
+      renderPortfolio();
+      renderGlobalSearch();
+      renderAnalytics();
       renderSelects();
     }
 
@@ -1346,10 +1806,83 @@
       const order = data.orders.find(item => item.id === id);
       if (!order) return "";
       const rest = number(order.price) - number(order.prepay);
-      return `<h1>Заказ для ${escapeHtml(getClientName(order.clientId))}</h1><p>${escapeHtml(order.dueDate || "")} ${escapeHtml(order.dueTime || "")} · статус: ${escapeHtml(order.status || "")}</p><p>Рецепт: ${escapeHtml(getRecipeName(order.recipeId))}, вес ${number(order.weight)} г</p><p>Начинка: ${escapeHtml(order.filling || "")}</p><p>Декор: ${escapeHtml(order.decor || "")}</p><p>Комментарий: ${escapeHtml(order.comment || "")}</p><p>Стоимость ${money(order.price)} · предоплата ${money(order.prepay)} · остаток ${money(rest)}</p><p>Доставка: ${money(order.delivery)} · адрес: ${escapeHtml(order.address || "")}</p><p>Отзыв: ${escapeHtml(order.review || "")}</p>`;
+      return `<h1>Заказ для ${escapeHtml(getClientName(order.clientId))}</h1><p>${escapeHtml(order.dueDate || "")} ${escapeHtml(order.dueTime || "")} · статус: ${escapeHtml(order.status || "")}</p><p>Повод: ${escapeHtml(order.occasion || "не указан")}</p><p>Рецепт: ${escapeHtml(getRecipeName(order.recipeId))}, вес ${number(order.weight)} г</p><p>Начинка: ${escapeHtml(order.filling || "")}</p><p>Декор: ${escapeHtml(order.decor || "")}</p><p>Комментарий: ${escapeHtml(order.comment || "")}</p><p>Стоимость ${money(order.price)} · предоплата ${money(order.prepay)} · остаток ${money(rest)}</p><p>Доставка: ${money(order.delivery)} · адрес: ${escapeHtml(order.address || "")}</p><p>Отзыв: ${escapeHtml(order.review || "")}</p>`;
+    }
+
+    function collectionByName(collection) {
+      return Array.isArray(data[collection]) ? data[collection] : [];
+    }
+
+    function toggleFavorite(collection, id) {
+      const item = collectionByName(collection).find(row => row.id === id);
+      if (!item) return;
+      item.favorite = item.favorite === "yes" ? "" : "yes";
+      saveData();
+      toast(item.favorite === "yes" ? "Добавлено в избранное" : "Удалено из избранного");
+    }
+
+    function deleteMaterial(collection, id) {
+      if (!confirm("Удалить материал?")) return;
+      data[collection] = collectionByName(collection).filter(row => row.id !== id);
+      saveData();
+      toast("Материал удалён");
+    }
+
+    function aiComingSoon() {
+      toast("Функция станет доступна после подключения AI");
+    }
+
+    function aiParseBook(collection, id) {
+      const item = collectionByName(collection).find(row => row.id === id);
+      if (item) item.ai = { status: "ready-for-ai", requestedAt: new Date().toISOString() };
+      saveData();
+      toast("Функция станет доступна после подключения AI");
+    }
+
+    function createCalcFromMaterial(collection, id) {
+      const item = collectionByName(collection).find(row => row.id === id);
+      if (!item) return;
+      clearRecipeForm();
+      document.querySelector("#recipeForm [name=title]").value = item.title || "";
+      document.querySelector("#recipeForm [name=category]").value = item.category || "Другое";
+      document.querySelector("#recipeForm [name=source]").value = item.link || item.source || "";
+      document.querySelector("#recipeForm [name=notes]").value = [item.notes, item.liked, item.change, item.tags].filter(Boolean).join("\n");
+      setSection("newRecipe");
+      recalcRecipeForm();
+      toast("Материал перенесён в калькулятор");
+    }
+
+    function saveExperimentAsRecipe(id) {
+      const item = data.lab.find(row => row.id === id);
+      if (!item) return;
+      const base = data.recipes.find(recipe => recipe.id === item.recipeId);
+      const recipe = base ? JSON.parse(JSON.stringify(base)) : {
+        ingredients: [],
+        expenses: [],
+        markupPercent: 100,
+        markupFixed: 0,
+        baseWeight: 1000,
+        servings: 8,
+        category: "Другое"
+      };
+      recipe.id = uid("recipe");
+      recipe.title = item.title;
+      recipe.photo = item.photo || recipe.photo || "";
+      recipe.notes = [recipe.notes, item.goal, item.changes, item.result, item.conclusion].filter(Boolean).join("\n");
+      recipe.rating = item.rating;
+      recipe.checked = item.isAuthor === "yes" ? "yes" : recipe.checked;
+      recipe.improvements = item.conclusion || "";
+      recipe.createdAt = new Date().toISOString();
+      recipe.totals = calculateRecipe(recipe);
+      data.recipes.unshift(recipe);
+      saveData();
+      toast("Эксперимент сохранён как новый рецепт");
+      setSection("recipes");
     }
 
     document.body.insertAdjacentHTML("beforeend", `<datalist id="ingredientOptions">${ingredientNames.map(name => `<option value="${name}">`).join("")}</datalist><datalist id="expenseOptions">${expenseNames.map(name => `<option value="${name}">`).join("")}</datalist>`);
+    document.getElementById("pastryCategory").innerHTML = pastryCategories.map(category => `<option>${category}</option>`).join("");
+    document.getElementById("culinaryCategory").innerHTML = culinaryCategories.map(category => `<option>${category}</option>`).join("");
 
     document.getElementById("nav").addEventListener("click", event => {
       const button = event.target.closest("button[data-section]");
@@ -1390,7 +1923,41 @@
 
     document.getElementById("recipeSearch").addEventListener("input", renderRecipes);
     document.getElementById("clientSearch").addEventListener("input", renderClients);
+    document.getElementById("pastryLibrarySearch").addEventListener("input", () => renderLibrary("pastry"));
+    document.getElementById("culinaryLibrarySearch").addEventListener("input", () => renderLibrary("culinary"));
+    document.getElementById("ideaSearch").addEventListener("input", renderIdeas);
+    document.getElementById("globalSearch").addEventListener("input", renderGlobalSearch);
+    document.getElementById("clearGlobalSearch").addEventListener("click", () => {
+      document.getElementById("globalSearch").value = "";
+      renderGlobalSearch();
+    });
     document.getElementById("runRecalc").addEventListener("click", runRecalc);
+
+    document.querySelectorAll(".library-form").forEach(form => {
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        const type = event.target.dataset.type;
+        const key = type === "pastry" ? "pastryLibrary" : "culinaryLibrary";
+        const values = getFormData(event.target);
+        const cover = await readImage(event.target.elements.cover);
+        const dishPhoto = await readImage(event.target.elements.dishPhoto);
+        const file = await readUpload(event.target.elements.file);
+        data[key].unshift({
+          id: uid(key),
+          createdAt: new Date().toISOString(),
+          addedAt: new Date().toLocaleDateString("ru-RU"),
+          favorite: "",
+          ai: { status: "not-requested", extractedRecipes: [], extractedIngredients: [] },
+          ...values,
+          cover,
+          dishPhoto,
+          file
+        });
+        event.target.reset();
+        saveData();
+        toast("Материал сохранён");
+      });
+    });
 
     document.getElementById("clientForm").addEventListener("submit", event => {
       event.preventDefault();
@@ -1445,6 +2012,33 @@
       toast("Закупка добавлена");
     });
 
+    document.getElementById("labForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const photo = await readImage(event.target.elements.photo);
+      data.lab.unshift({ id: uid("lab"), createdAt: new Date().toISOString(), ...getFormData(event.target), photo });
+      event.target.reset();
+      saveData();
+      toast("Эксперимент сохранён");
+    });
+
+    document.getElementById("galleryForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const photo = await readImage(event.target.elements.photo);
+      data.gallery.unshift({ id: uid("gallery"), createdAt: new Date().toISOString(), ...getFormData(event.target), photo });
+      event.target.reset();
+      saveData();
+      toast("Работа добавлена в галерею");
+    });
+
+    document.getElementById("ideaForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const photo = await readImage(event.target.elements.photo);
+      data.ideas.unshift({ id: uid("idea"), createdAt: new Date().toISOString(), ...getFormData(event.target), photo });
+      event.target.reset();
+      saveData();
+      toast("Идея сохранена");
+    });
+
     document.getElementById("exportData").addEventListener("click", () => {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -1497,6 +2091,13 @@
     window.duplicateRecipe = duplicateRecipe;
     window.useRecipeInOrder = useRecipeInOrder;
     window.deleteRecipe = deleteRecipe;
+    window.setSection = setSection;
+    window.toggleFavorite = toggleFavorite;
+    window.createCalcFromMaterial = createCalcFromMaterial;
+    window.aiParseBook = aiParseBook;
+    window.aiComingSoon = aiComingSoon;
+    window.deleteMaterial = deleteMaterial;
+    window.saveExperimentAsRecipe = saveExperimentAsRecipe;
 
     clearRecipeForm();
     renderAll();
