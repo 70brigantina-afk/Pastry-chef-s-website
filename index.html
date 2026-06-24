@@ -560,6 +560,15 @@
       gap: 13px;
     }
 
+    .help-card ol {
+      margin: 10px 0 0;
+      padding-left: 22px;
+      color: var(--cocoa);
+      line-height: 1.55;
+    }
+
+    .help-card li + li { margin-top: 5px; }
+
     @media (max-width: 1100px) {
       .app { grid-template-columns: 1fr; }
       .sidebar { position: relative; height: auto; }
@@ -613,12 +622,13 @@
         <button data-section="stock">🛒 Склад <span>10</span></button>
         <button data-section="purchases">📋 Закупки <span>11</span></button>
         <button data-section="knowledge">📚 База знаний <span>12</span></button>
-        <button data-section="gallery">📸 Галерея работ <span>13</span></button>
-        <button data-section="portfolio">🏆 Портфолио <span>14</span></button>
-        <button data-section="ideas">💡 Банк идей <span>15</span></button>
-        <button data-section="analytics">📊 Аналитика <span>16</span></button>
-        <button data-section="settings">⚙ Настройки <span>17</span></button>
-        <button data-section="backup">Экспорт/импорт <span>18</span></button>
+        <button data-section="help">❓ Помощь и подсказки <span>13</span></button>
+        <button data-section="gallery">📸 Галерея работ <span>14</span></button>
+        <button data-section="portfolio">🏆 Портфолио <span>15</span></button>
+        <button data-section="ideas">💡 Банк идей <span>16</span></button>
+        <button data-section="analytics">📊 Аналитика <span>17</span></button>
+        <button data-section="settings">⚙ Настройки <span>18</span></button>
+        <button data-section="backup">Экспорт/импорт <span>19</span></button>
       </nav>
       <div class="sidebar-note">
         Все данные сохраняются только в этом браузере. Регулярно делайте экспорт JSON, чтобы не потерять рецепты, клиентов и заказы.
@@ -969,6 +979,27 @@
         </div>
       </section>
 
+      <section class="section" id="help">
+        <div class="grid">
+          <div class="card span-12">
+            <h3>Помощь и подсказки</h3>
+            <p class="muted">Введите вопрос обычными словами: например, «как загрузить PDF», «где найти книгу», «почему файл не открылся», «как сохранить рецепт», «как сделать экспорт».</p>
+            <div class="global-search" style="max-width:none">
+              <input id="helpSearch" placeholder="Поиск по помощи: загрузить книгу, открыть файл, сохранить заказ, импорт, склад, клиент">
+              <button class="btn secondary" id="clearHelpSearch" type="button">Очистить</button>
+            </div>
+          </div>
+          <div class="card span-4">
+            <h3>Быстрые темы</h3>
+            <div class="actions" id="helpQuickTopics"></div>
+          </div>
+          <div class="card span-8">
+            <h3>Ответы и инструкции</h3>
+            <div class="list" id="helpList"></div>
+          </div>
+        </div>
+      </section>
+
       <section class="section" id="lab">
         <div class="grid">
           <form class="card span-5" id="labForm">
@@ -1147,6 +1178,145 @@
       ["Транспортировка", "Летом планируйте охлаждение, термосумку и запас времени на стабилизацию перед дорогой."],
       ["Упаковка", "Коробка, подложка, лента, вкладыш и наклейки влияют на прибыль сильнее, чем кажется."],
       ["Себестоимость и цена", "Сравнивайте прибыль и маржу: высокая наценка в процентах не всегда означает здоровую прибыль в рублях."]
+    ];
+    const helpTopics = [
+      {
+        title: "Как загрузить PDF, книгу или документ",
+        tags: "pdf книга документ docx txt файл загрузить сохранить библиотека",
+        section: "Кондитерская и кулинарная библиотека",
+        steps: [
+          "Откройте раздел «Кондитерская библиотека» или «Кулинарная библиотека».",
+          "Нажмите поле «Файл книги / техкарты в любом формате» и выберите PDF, DOCX, TXT, изображение или другой файл.",
+          "Если название пустое, сайт сам подставит его из имени файла.",
+          "Заполните категорию, автора, теги и заметки, если хотите быстрее находить материал.",
+          "Нажмите «Сохранить материал». Карточка сразу появится справа в списке."
+        ]
+      },
+      {
+        title: "Где найти загруженную книгу или файл",
+        tags: "найти книгу файл где лежит открыть после загрузки поиск",
+        section: "Библиотеки и глобальный поиск",
+        steps: [
+          "Откройте ту библиотеку, куда загружали материал: кондитерскую или кулинарную.",
+          "Используйте поиск над списком материалов: можно искать по названию, автору, тегу, категории или заметке.",
+          "Также можно искать с главной страницы через глобальный поиск.",
+          "В карточке материала будет показано имя файла, размер и кнопка «Открыть файл»."
+        ]
+      },
+      {
+        title: "Как открыть загруженный PDF или DOCX",
+        tags: "открыть файл pdf docx книга скачать просмотр не открывается",
+        section: "Карточка материала",
+        steps: [
+          "Найдите карточку книги или документа в библиотеке.",
+          "Нажмите кнопку «Открыть файл».",
+          "PDF обычно откроется в новой вкладке браузера.",
+          "DOCX, архивы и редкие форматы браузер может скачать на компьютер для открытия в отдельной программе.",
+          "Если новая вкладка не появилась, проверьте, не заблокировал ли браузер всплывающее окно."
+        ]
+      },
+      {
+        title: "Почему файл мог не сохраниться",
+        tags: "не сохраняется ошибка файл pdf localStorage indexedDB память хранилище",
+        section: "Хранилище браузера",
+        steps: [
+          "Крупные файлы сохраняются в локальное хранилище браузера IndexedDB, а карточки — в localStorage.",
+          "Если браузер работает в приватном режиме, локальное хранилище может быть ограничено.",
+          "Если места в браузере мало, удалите ненужные материалы или освободите память.",
+          "После сохранения карточка должна появиться сразу; если не появилась, попробуйте обновить страницу и повторить загрузку.",
+          "Не очищайте данные сайта в настройках браузера, иначе локальные книги и записи могут удалиться."
+        ]
+      },
+      {
+        title: "Как сохранить рецепт и калькуляцию",
+        tags: "рецепт калькуляция себестоимость ингредиенты расходы сохранить цена прибыль",
+        section: "Калькулятор себестоимости",
+        steps: [
+          "Откройте «Калькулятор себестоимости».",
+          "Заполните название, категорию, вес, порции, форму и заметки.",
+          "Добавьте ингредиенты, расходы, упаковку, труд, доставку и электричество.",
+          "Выберите наценку или задайте свою финальную цену.",
+          "Нажмите «Сохранить рецепт». Рецепт появится в разделе «Рецепты»."
+        ]
+      },
+      {
+        title: "Как создать калькуляцию из книги или техкарты",
+        tags: "создать калькуляцию из книги техкарта материал рецепт перенести",
+        section: "Библиотека → калькулятор",
+        steps: [
+          "Найдите материал в кондитерской или кулинарной библиотеке.",
+          "Нажмите кнопку «Создать калькуляцию».",
+          "Название, ссылка, заметки и теги перенесутся в калькулятор.",
+          "Ингредиенты пока нужно внести вручную; автоматическое извлечение подготовлено для будущего AI."
+        ]
+      },
+      {
+        title: "Как добавить клиента и посмотреть историю заказов",
+        tags: "клиент crm история заказ телефон whatsapp telegram",
+        section: "Клиенты",
+        steps: [
+          "Откройте раздел «Клиенты».",
+          "Заполните имя, телефон, мессенджеры, адрес, важные даты, предпочтения и аллергии.",
+          "Нажмите «Сохранить клиента».",
+          "Когда вы создаёте заказы на этого клиента, они автоматически отображаются в его истории."
+        ]
+      },
+      {
+        title: "Как оформить заказ",
+        tags: "заказ оформить дата выдачи клиент рецепт предоплата остаток статус",
+        section: "Заказы",
+        steps: [
+          "Откройте раздел «Заказы».",
+          "Выберите клиента, рецепт, дату заказа, дату выдачи, повод, начинку, декор и статус.",
+          "Укажите стоимость, себестоимость, предоплату и доставку.",
+          "Отметьте чек-лист заказа.",
+          "Нажмите «Сохранить заказ». Заказ появится в списке и в аналитике."
+        ]
+      },
+      {
+        title: "Как вести склад и видеть предупреждения",
+        tags: "склад остатки ингредиент минимум предупреждение закупка срок годности",
+        section: "Склад",
+        steps: [
+          "Откройте раздел «Склад».",
+          "Добавьте ингредиент, остаток, единицу измерения, минимальный остаток, цену, поставщика и срок годности.",
+          "Если текущий остаток ниже минимума, сайт покажет предупреждение.",
+          "Такие позиции также отображаются на панели управления."
+        ]
+      },
+      {
+        title: "Как добавить закупку",
+        tags: "закупка купить список поставщик бюджет вручную",
+        section: "Закупки",
+        steps: [
+          "Откройте раздел «Склад» и заполните блок «Закупка вручную».",
+          "Укажите что купить, количество, бюджет, дату и поставщика.",
+          "Нажмите «Добавить в закупки».",
+          "Список закупок можно посмотреть в разделе «Закупки» или в нижней части склада."
+        ]
+      },
+      {
+        title: "Как сделать экспорт и импорт данных",
+        tags: "экспорт импорт json backup резервная копия сохранить перенести данные",
+        section: "Экспорт/импорт",
+        steps: [
+          "Откройте раздел «Экспорт/импорт».",
+          "Нажмите «Экспортировать JSON», чтобы сохранить резервную копию карточек и записей.",
+          "Для восстановления выберите JSON-файл в блоке импорта.",
+          "Важно: крупные файлы книг хранятся отдельно в локальном хранилище браузера; не очищайте данные сайта."
+        ]
+      },
+      {
+        title: "Как пользоваться глобальным поиском",
+        tags: "поиск найти вопрос книга рецепт клиент заказ тег автор заметка помощь",
+        section: "Панель управления",
+        steps: [
+          "На главной странице введите слово или вопрос в глобальный поиск.",
+          "Поиск смотрит рецепты, библиотеки, клиентов, заказы, склад, закупки, идеи и помощь.",
+          "Для точного результата используйте слова из названия, автора, тега, ингредиента или заметки.",
+          "Если нужен ответ по работе сайта, откройте раздел «Помощь и подсказки» и задайте вопрос там."
+        ]
+      }
     ];
 
     let data = loadData();
@@ -1736,7 +1906,8 @@
         ["Закупка", data.purchases, item => item.name],
         ["Лаборатория", data.lab, item => item.title],
         ["Галерея", data.gallery, item => item.title],
-        ["Идея", data.ideas, item => item.title]
+        ["Идея", data.ideas, item => item.title],
+        ["Помощь", helpTopics, item => item.title]
       ];
       const results = sources.flatMap(([label, rows, titleFn]) => rows.filter(item => containsText(item, query)).map(item => ({ label, title: titleFn(item), item })));
       card.style.display = "block";
@@ -1806,6 +1977,30 @@
       document.getElementById("knowledgeGrid").innerHTML = knowledge.map(([title, text]) => `<div class="card span-4"><span class="pill">${escapeHtml(title)}</span><p>${escapeHtml(text)}</p></div>`).join("");
     }
 
+    function renderHelp() {
+      const query = document.getElementById("helpSearch").value.trim().toLowerCase();
+      const rows = helpTopics.filter(topic => containsText(topic, query));
+      document.getElementById("helpQuickTopics").innerHTML = ["PDF", "книга", "открыть файл", "рецепт", "заказ", "склад", "экспорт", "поиск"].map(topic => `<button class="btn secondary" type="button" onclick="setHelpQuery('${topic}')">${topic}</button>`).join("");
+      document.getElementById("helpList").innerHTML = rows.length ? rows.map(topic => `
+        <div class="item help-card">
+          <div class="item-head">
+            <div>
+              <h4>${escapeHtml(topic.title)}</h4>
+              <span class="pill">${escapeHtml(topic.section)}</span>
+            </div>
+          </div>
+          <ol>${topic.steps.map(step => `<li>${escapeHtml(step)}</li>`).join("")}</ol>
+          <p class="muted">Ключевые слова: ${escapeHtml(topic.tags)}</p>
+        </div>
+      `).join("") : `<div class="empty">По этому вопросу пока нет подсказки. Попробуйте другие слова: файл, книга, PDF, рецепт, заказ, склад, экспорт.</div>`;
+    }
+
+    function setHelpQuery(query) {
+      document.getElementById("helpSearch").value = query;
+      renderHelp();
+      setSection("help");
+    }
+
     function fillSelect(select, rows, emptyLabel, labelFn) {
       const value = select.value;
       select.innerHTML = `<option value="">${emptyLabel}</option>` + rows.map(row => `<option value="${row.id}">${escapeHtml(labelFn(row))}</option>`).join("");
@@ -1839,6 +2034,7 @@
       renderOrders();
       renderStock();
       renderKnowledge();
+      renderHelp();
       renderLab();
       renderGallery();
       renderIdeas();
@@ -2027,6 +2223,11 @@
     document.getElementById("pastryLibrarySearch").addEventListener("input", () => renderLibrary("pastry"));
     document.getElementById("culinaryLibrarySearch").addEventListener("input", () => renderLibrary("culinary"));
     document.getElementById("ideaSearch").addEventListener("input", renderIdeas);
+    document.getElementById("helpSearch").addEventListener("input", renderHelp);
+    document.getElementById("clearHelpSearch").addEventListener("click", () => {
+      document.getElementById("helpSearch").value = "";
+      renderHelp();
+    });
     document.getElementById("globalSearch").addEventListener("input", renderGlobalSearch);
     document.getElementById("clearGlobalSearch").addEventListener("click", () => {
       document.getElementById("globalSearch").value = "";
@@ -2208,6 +2409,7 @@
     window.aiComingSoon = aiComingSoon;
     window.deleteMaterial = deleteMaterial;
     window.saveExperimentAsRecipe = saveExperimentAsRecipe;
+    window.setHelpQuery = setHelpQuery;
 
     clearRecipeForm();
     renderAll();
