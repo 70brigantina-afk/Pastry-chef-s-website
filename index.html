@@ -673,7 +673,7 @@
               <div class="field col-6"><label>Категория</label><select name="category" id="pastryCategory"></select></div>
               <div class="field col-6"><label>Обложка</label><input name="cover" type="file" accept="image/*"></div>
               <div class="field col-6"><label>Фото блюда</label><input name="dishPhoto" type="file" accept="image/*"></div>
-              <div class="field col-12"><label>Файл книги / техкарты</label><input name="file" type="file" accept=".pdf,.txt,.docx,.jpg,.jpeg,.png,.webp,image/*,application/pdf,text/plain"></div>
+              <div class="field col-12"><label>Файл книги / техкарты в любом формате</label><input name="file" type="file"></div>
               <div class="field col-6"><label>Источник</label><input name="source"></div>
               <div class="field col-6"><label>Ссылка</label><input name="link" type="url"></div>
               <div class="field col-6"><label>Теги</label><input name="tags" placeholder="фисташка, мусс, ягоды"></div>
@@ -706,7 +706,7 @@
               <div class="field col-6"><label>Категория</label><select name="category" id="culinaryCategory"></select></div>
               <div class="field col-6"><label>Обложка</label><input name="cover" type="file" accept="image/*"></div>
               <div class="field col-6"><label>Фото блюда</label><input name="dishPhoto" type="file" accept="image/*"></div>
-              <div class="field col-12"><label>Файл книги / рецепта</label><input name="file" type="file" accept=".pdf,.txt,.docx,.jpg,.jpeg,.png,.webp,image/*,application/pdf,text/plain"></div>
+              <div class="field col-12"><label>Файл книги / рецепта в любом формате</label><input name="file" type="file"></div>
               <div class="field col-6"><label>Источник</label><input name="source"></div>
               <div class="field col-6"><label>Ссылка</label><input name="link" type="url"></div>
               <div class="field col-6"><label>Теги</label><input name="tags"></div>
@@ -1084,7 +1084,7 @@
           </div>
           <div class="card span-6">
             <h3>Локальные настройки</h3>
-            <p class="muted">Приложение работает без сервера. Все данные находятся в localStorage этого браузера, включая загруженные изображения и файлы.</p>
+            <p class="muted">Приложение работает без сервера. Карточки и настройки сохраняются в localStorage, а крупные документы и книги — в локальном хранилище браузера, чтобы PDF и DOCX не упирались в лимит JSON-базы.</p>
             <div class="item"><strong>Валюта:</strong> рубли · <strong>Единицы:</strong> г, кг, мл, л, шт, час, км</div>
           </div>
         </div>
@@ -1125,6 +1125,8 @@
 
   <script>
     const STORAGE_KEY = "pastryChefProData.v1";
+    const FILE_DB_NAME = "pastryChefProFiles.v1";
+    const FILE_STORE = "files";
     const units = ["г", "кг", "мл", "л", "шт", "час", "км"];
     const priceBases = ["за кг", "за литр", "за штуку", "за 100 г", "за час", "за км"];
     const ingredientNames = ["Мука", "Сахар", "Сливки", "Масло сливочное", "Шоколад", "Яйца", "Молоко", "Ягоды", "Творожный сыр", "Желатин", "Какао", "Орехи", "Соль", "Ваниль", "Другое"];
@@ -1177,8 +1179,16 @@
     }
 
     function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      renderAll();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        renderAll();
+        return true;
+      } catch (error) {
+        console.error("Не удалось сохранить данные", error);
+        toast("Не удалось сохранить данные: браузерное хранилище заполнено");
+        renderAll();
+        return false;
+      }
     }
 
     function money(value) {
@@ -1215,15 +1225,77 @@
       });
     }
 
-    function readUpload(input) {
-      return new Promise(resolve => {
-        const file = input.files && input.files[0];
-        if (!file) return resolve(null);
-        const reader = new FileReader();
-        reader.onload = () => resolve({ name: file.name, type: file.type || "file", size: file.size, data: reader.result });
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
+    function openFileDb() {
+      return new Promise((resolve, reject) => {
+        if (!("indexedDB" in window)) return reject(new Error("IndexedDB недоступен"));
+        const request = indexedDB.open(FILE_DB_NAME, 1);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(FILE_STORE)) db.createObjectStore(FILE_STORE, { keyPath: "id" });
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
       });
+    }
+
+    async function storeUpload(input) {
+      const file = input.files && input.files[0];
+      if (!file) return null;
+      const id = uid("file");
+      try {
+        const db = await openFileDb();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(FILE_STORE, "readwrite");
+          tx.objectStore(FILE_STORE).put({
+            id,
+            blob: file,
+            name: file.name,
+            type: file.type || "application/octet-stream",
+            size: file.size,
+            lastModified: file.lastModified
+          });
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+        return {
+          storage: "indexedDB",
+          id,
+          name: file.name,
+          type: file.type || "application/octet-stream",
+          size: file.size,
+          lastModified: file.lastModified
+        };
+      } catch (error) {
+        console.warn("Не удалось сохранить файл в IndexedDB, пробую резервный способ", error);
+        return new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({
+            storage: "localStorage",
+            name: file.name,
+            type: file.type || "application/octet-stream",
+            size: file.size,
+            data: reader.result
+          });
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    async function getStoredFileUrl(fileMeta) {
+      if (!fileMeta) return "";
+      if (fileMeta.data) return fileMeta.data;
+      if (fileMeta.storage !== "indexedDB" || !fileMeta.id) return "";
+      const db = await openFileDb();
+      const record = await new Promise((resolve, reject) => {
+        const tx = db.transaction(FILE_STORE, "readonly");
+        const request = tx.objectStore(FILE_STORE).get(fileMeta.id);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      db.close();
+      return record && record.blob ? URL.createObjectURL(record.blob) : "";
     }
 
     function getFormData(form) {
@@ -1233,6 +1305,14 @@
     function stars(value) {
       const rating = Math.max(0, Math.min(5, number(value)));
       return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(0, 5 - rating);
+    }
+
+    function formatBytes(bytes) {
+      const size = number(bytes);
+      if (!size) return "размер не указан";
+      if (size < 1024) return `${size} Б`;
+      if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} КБ`;
+      return `${(size / 1024 / 1024).toFixed(1)} МБ`;
     }
 
     function containsText(source, query) {
@@ -1571,9 +1651,10 @@
               <span class="rating">${stars(item.rating)}</span>
             </div>
             <p class="muted">${escapeHtml(item.author || "Автор не указан")} · ${escapeHtml(item.source || "источник не указан")} · добавлено ${escapeHtml(item.addedAt || "")}</p>
+            ${item.file ? `<p><span class="pill">${escapeHtml(item.file.name || "файл")}</span> <span class="muted">${formatBytes(item.file.size)} · ${escapeHtml(item.file.type || "формат не указан")}</span></p>` : ""}
             <p>${escapeHtml([item.tags, item.notes, item.liked, item.change].filter(Boolean).join(" · "))}</p>
             <div class="actions">
-              ${item.file ? `<a class="btn secondary" href="${item.file.data}" download="${escapeHtml(item.file.name)}">Открыть</a>` : ""}
+              ${item.file ? `<button class="btn secondary" type="button" onclick="openStoredFile('${collection}','${item.id}')">Открыть файл</button>` : ""}
               <button class="btn secondary" type="button" onclick="toggleFavorite('${collection}','${item.id}')">${item.favorite === "yes" ? "Убрать из избранного" : "В избранное"}</button>
               <button class="btn secondary" type="button" onclick="createCalcFromMaterial('${collection}','${item.id}')">Создать калькуляцию</button>
               <button class="btn secondary" type="button" onclick="aiParseBook('${collection}','${item.id}')">Разобрать книгу</button>
@@ -1828,6 +1909,26 @@
       toast("Материал удалён");
     }
 
+    async function openStoredFile(collection, id) {
+      const item = collectionByName(collection).find(row => row.id === id);
+      if (!item || !item.file) return toast("Файл не найден в карточке");
+      try {
+        const url = await getStoredFileUrl(item.file);
+        if (!url) return toast("Не удалось открыть файл");
+        const opened = window.open(url, "_blank");
+        if (!opened) {
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = item.file.name || "material";
+          link.click();
+        }
+        if (url.startsWith("blob:")) setTimeout(() => URL.revokeObjectURL(url), 60000);
+      } catch (error) {
+        console.error("Не удалось открыть файл", error);
+        toast("Не удалось открыть файл");
+      }
+    }
+
     function aiComingSoon() {
       toast("Функция станет доступна после подключения AI");
     }
@@ -1934,6 +2035,13 @@
     document.getElementById("runRecalc").addEventListener("click", runRecalc);
 
     document.querySelectorAll(".library-form").forEach(form => {
+      form.elements.file.addEventListener("change", event => {
+        const file = event.target.files && event.target.files[0];
+        if (file && !form.elements.title.value.trim()) {
+          form.elements.title.value = file.name.replace(/\.[^/.]+$/, "");
+        }
+      });
+
       form.addEventListener("submit", async event => {
         event.preventDefault();
         const type = event.target.dataset.type;
@@ -1941,7 +2049,7 @@
         const values = getFormData(event.target);
         const cover = await readImage(event.target.elements.cover);
         const dishPhoto = await readImage(event.target.elements.dishPhoto);
-        const file = await readUpload(event.target.elements.file);
+        const file = await storeUpload(event.target.elements.file);
         data[key].unshift({
           id: uid(key),
           createdAt: new Date().toISOString(),
@@ -1949,6 +2057,7 @@
           favorite: "",
           ai: { status: "not-requested", extractedRecipes: [], extractedIngredients: [] },
           ...values,
+          title: values.title || (file && file.name ? file.name.replace(/\.[^/.]+$/, "") : "Материал без названия"),
           cover,
           dishPhoto,
           file
@@ -2093,6 +2202,7 @@
     window.deleteRecipe = deleteRecipe;
     window.setSection = setSection;
     window.toggleFavorite = toggleFavorite;
+    window.openStoredFile = openStoredFile;
     window.createCalcFromMaterial = createCalcFromMaterial;
     window.aiParseBook = aiParseBook;
     window.aiComingSoon = aiComingSoon;
