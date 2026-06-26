@@ -53,6 +53,7 @@
     button { cursor: pointer; border: 0; }
     a { color: var(--caramel-dark); }
     img { max-width: 100%; display: block; }
+    input, select, textarea, button { min-width: 0; }
 
     .app {
       display: grid;
@@ -141,7 +142,7 @@
 
     main {
       padding: 32px clamp(18px, 4vw, 54px) 60px;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .hero {
@@ -301,6 +302,8 @@
       background: linear-gradient(145deg, var(--chocolate), var(--caramel-dark));
       box-shadow: 0 13px 28px rgba(79, 51, 40, .18);
       transition: .16s ease;
+      max-width: 100%;
+      white-space: normal;
     }
 
     .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 34px rgba(79, 51, 40, .22); }
@@ -391,6 +394,60 @@
       background: rgba(243, 223, 189, .62);
       border: 1px solid rgba(79, 51, 40, .1);
       font-size: 13px;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .tag-bar,
+    .tag-list,
+    .tag-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .tag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      color: var(--chocolate);
+      border: 1px solid rgba(79, 51, 40, .12);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .tag-chip {
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: var(--chocolate);
+      background: rgba(255,255,255,.68);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    .tag-chip.active {
+      color: var(--milk);
+      background: var(--chocolate);
+    }
+
+    .tag-badge .btn {
+      width: auto;
+      min-height: 24px;
+      padding: 3px 7px;
+      font-size: 12px;
+    }
+
+    .tag-manager-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px auto;
+      gap: 10px;
+      align-items: end;
     }
 
     .list {
@@ -411,6 +468,7 @@
       gap: 12px;
       align-items: flex-start;
       margin-bottom: 10px;
+      flex-wrap: wrap;
     }
 
     .item h4 { margin: 0 0 5px; font-size: 20px; }
@@ -571,21 +629,66 @@
 
     @media (max-width: 1100px) {
       .app { grid-template-columns: 1fr; }
-      .sidebar { position: relative; height: auto; }
+      .sidebar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        height: auto;
+        max-height: 48vh;
+      }
       .nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .span-3, .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
     }
 
     @media (max-width: 720px) {
       main { padding: 18px 12px 40px; }
-      .sidebar { padding: 18px 12px; }
-      .nav { grid-template-columns: 1fr; }
+      .sidebar {
+        padding: 14px 12px;
+        max-height: 56vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .brand { margin-bottom: 12px; }
+      .brand-mark { width: 46px; height: 46px; border-radius: 16px; }
+      .brand h1 { font-size: 21px; }
+      .nav {
+        grid-template-columns: 1fr;
+        gap: 7px;
+        margin: 12px 0;
+      }
+      .nav button {
+        padding: 11px 12px;
+        transform: none !important;
+      }
+      .sidebar-note { display: none; }
       .hero { border-radius: 24px; }
+      .hero h2 { font-size: clamp(34px, 12vw, 48px); }
+      .global-search,
+      .tag-manager-row {
+        grid-template-columns: 1fr;
+      }
       .row { grid-template-columns: 1fr; }
       .col-2, .col-3, .col-4, .col-5, .col-6, .col-8, .col-12 { grid-column: span 1; }
       .recipe-card { grid-template-columns: 1fr; }
       .thumb { width: 100%; height: 180px; }
       .checklist { grid-template-columns: 1fr; }
+      .card, .item { padding: 16px; border-radius: 20px; }
+      .actions { display: grid; grid-template-columns: 1fr; }
+      .btn { width: 100%; }
+      .modal { padding: 10px; align-items: start; }
+      .modal-card {
+        max-height: calc(100vh - 20px);
+        padding: 16px;
+        border-radius: 22px;
+      }
+      table { min-width: 640px; }
+    }
+
+    @media (max-width: 420px) {
+      main { padding-inline: 8px; }
+      .sidebar { padding-inline: 8px; }
+      table { min-width: 560px; }
+      th, td { padding: 8px; }
     }
 
     @media print {
@@ -748,12 +851,15 @@
               <div class="field col-3"><label>Дата цен</label><input type="date" name="priceDate"></div>
               <div class="field col-4"><label>Фото десерта</label><input type="file" name="photo" accept="image/*"></div>
               <div class="field col-8"><label>Ссылка на источник рецепта</label><input name="source" type="url" placeholder="https://..."></div>
+              <div class="field col-12"><label>Теги</label><input name="tags" placeholder="Фисташка, Проверено, Для продажи"></div>
               <div class="field col-3"><label>Базовый вес, г</label><input name="baseWeight" type="number" min="0" step="1" value="1000"></div>
               <div class="field col-3"><label>Порций / штук</label><input name="servings" type="number" min="0" step="1" value="8"></div>
-              <div class="field col-3"><label>Форма</label><select name="shape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option></select></div>
+              <div class="field col-3"><label>Форма</label><select name="shape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option><option>конус</option></select></div>
               <div class="field col-3"><label>Диаметр / длина, см</label><input name="length" type="number" min="0" step="0.1"></div>
               <div class="field col-3"><label>Ширина, см</label><input name="width" type="number" min="0" step="0.1"></div>
               <div class="field col-3"><label>Высота, см</label><input name="height" type="number" min="0" step="0.1"></div>
+              <div class="field col-3"><label>Конус: верхний диаметр, см</label><input name="topDiameter" type="number" min="0" step="0.1"></div>
+              <div class="field col-3"><label>Конус: нижний диаметр, см</label><input name="bottomDiameter" type="number" min="0" step="0.1"></div>
               <div class="field col-3"><label>Срок хранения</label><input name="shelfLife" placeholder="Например, 72 часа"></div>
               <div class="field col-3"><label>Температура хранения</label><input name="storageTemp" placeholder="+2...+6 °C"></div>
               <div class="field col-3"><label>Срок заморозки</label><input name="freezeLife" placeholder="до 30 дней"></div>
@@ -826,10 +932,12 @@
             <div class="field"><label>Метод</label><select id="recalcMode"><option value="weight">по весу</option><option value="shape">по площади формы</option><option value="volume">по объёму формы</option></select></div>
             <div class="row">
               <div class="field col-6"><label>Новый вес, г</label><input id="newWeight" type="number" min="0" step="1"></div>
-              <div class="field col-6"><label>Новая форма</label><select id="newShape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option></select></div>
+              <div class="field col-6"><label>Новая форма</label><select id="newShape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option><option>конус</option></select></div>
               <div class="field col-4"><label>Диаметр / длина, см</label><input id="newLength" type="number" min="0" step="0.1"></div>
               <div class="field col-4"><label>Ширина, см</label><input id="newWidth" type="number" min="0" step="0.1"></div>
               <div class="field col-4"><label>Высота, см</label><input id="newHeight" type="number" min="0" step="0.1"></div>
+              <div class="field col-6"><label>Конус: верхний диаметр, см</label><input id="newTopDiameter" type="number" min="0" step="0.1"></div>
+              <div class="field col-6"><label>Конус: нижний диаметр, см</label><input id="newBottomDiameter" type="number" min="0" step="0.1"></div>
             </div>
             <div class="actions"><button class="btn" id="runRecalc" type="button">Пересчитать</button></div>
             <div class="item" id="recalcSummary" style="margin-top:14px"></div>
@@ -871,6 +979,7 @@
               <div class="field col-6"><label>Аллергии</label><textarea name="allergies"></textarea></div>
               <div class="field col-6"><label>Любимые начинки</label><textarea name="fillings"></textarea></div>
               <div class="field col-12"><label>Любимый стиль оформления</label><input name="style"></div>
+              <div class="field col-12"><label>Теги</label><input name="tags" placeholder="Любимый, Детский праздник, Без сахара"></div>
               <div class="field col-12"><label>Заметки</label><textarea name="notes"></textarea></div>
             </div>
             <button class="btn" type="submit">Сохранить клиента</button>
@@ -907,6 +1016,7 @@
               <div class="field col-3"><label>Доставка, ₽</label><input name="delivery" type="number" min="0"></div>
               <div class="field col-8"><label>Адрес</label><input name="address"></div>
               <div class="field col-4"><label>Статус</label><select name="status"><option>новый</option><option>ждёт предоплату</option><option>предоплата получена</option><option>закупка</option><option>в работе</option><option>готов</option><option>выдан</option><option>отменён</option></select></div>
+              <div class="field col-12"><label>Теги</label><input name="tags" placeholder="Новый, Детский праздник, Срочно"></div>
               <div class="field col-12"><label>Отзыв и что учесть в следующий раз</label><textarea name="review"></textarea></div>
             </div>
             <h4>Чек-лист заказа</h4>
@@ -1016,6 +1126,7 @@
               <div class="field col-8"><label>Выводы</label><textarea name="conclusion"></textarea></div>
               <div class="field col-2"><label>Рейтинг</label><select name="rating"><option value="0">-</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
               <div class="field col-2"><label>Авторский</label><select name="isAuthor"><option value="">нет</option><option value="yes">да</option></select></div>
+              <div class="field col-12"><label>Теги</label><input name="tags" placeholder="Авторский, Эксперимент, Заморозка"></div>
             </div>
             <button class="btn" type="submit">Сохранить эксперимент</button>
           </form>
@@ -1118,6 +1229,16 @@
             <p class="muted">Приложение работает без сервера. Карточки и настройки сохраняются в localStorage, а крупные документы и книги — в локальном хранилище браузера, чтобы PDF и DOCX не упирались в лимит JSON-базы.</p>
             <div class="item"><strong>Валюта:</strong> рубли · <strong>Единицы:</strong> г, кг, мл, л, шт, час, км</div>
           </div>
+          <div class="card span-12">
+            <h3>Система тегов</h3>
+            <p class="muted">Создавайте теги один раз, затем выбирайте их в рецептах, библиотеках, клиентах, заказах, идеях и лаборатории. В поле тегов можно также вписывать новые значения через запятую.</p>
+            <div class="tag-manager-row">
+              <div class="field"><label>Название тега</label><input id="tagName" placeholder="Например, Фисташка"></div>
+              <div class="field"><label>Цвет</label><input id="tagColor" type="color" value="#f3dfbd"></div>
+              <button class="btn" id="saveTag" type="button">Сохранить тег</button>
+            </div>
+            <div class="tag-list" id="tagManagerList"></div>
+          </div>
         </div>
       </section>
 
@@ -1165,6 +1286,12 @@
     const checklistItems = ["клиент выбран", "дата подтверждена", "вес подтверждён", "вкус подтверждён", "декор подтверждён", "аллергии проверены", "упаковка учтена", "доставка согласована", "предоплата получена", "остаток оплаты рассчитан", "фото после выдачи добавлено", "отзыв записан"];
     const pastryCategories = ["Торты", "Бенто", "Капкейки", "Муссовые десерты", "Пирожные", "Эклеры", "Макарон", "Моти", "Чизкейки", "Тарты", "Печенье", "Конфеты", "Зефир", "Мармелад", "Шоколад", "Кремы", "Начинки", "Бисквиты", "Глазури", "Ганаши", "Технологические карты", "Декор"];
     const culinaryCategories = ["Завтраки", "Салаты", "Супы", "Горячие блюда", "Гарниры", "Закуски", "Соусы", "Выпечка", "Хлеб", "Напитки", "Заготовки", "Национальная кухня", "Диетические блюда", "Детское меню", "Праздничное меню"];
+    const defaultTags = [
+      ["Новый", "#f3dfbd"], ["Проверено", "#cfe0b5"], ["Любимый", "#f3c1bd"], ["Фисташка", "#c9d8a8"],
+      ["Малина", "#f0b7c4"], ["Шоколад", "#d0aa8a"], ["Для продажи", "#f1d18a"], ["Авторский", "#d8c3f0"],
+      ["Детский праздник", "#bfe1f2"], ["Без сахара", "#d8ead2"], ["Без глютена", "#ead6b8"], ["ПП", "#cce5cc"],
+      ["Заморозка", "#c7ddf0"], ["Ярусный", "#e8c49f"]
+    ].map(([name, color]) => ({ id: uid("tag"), name, color }));
     const knowledge = [
       ["Торты", "Для стабильной сборки считайте не только продукты, но и подложку, коробку, ленту, электричество и время на декор."],
       ["Ярусные торты", "Каждый ярус ставьте на отдельную подложку, используйте опоры и заранее проверяйте высоту коробки."],
@@ -1321,6 +1448,7 @@
 
     let data = loadData();
     let currentRecipeId = null;
+    let editingTagId = null;
 
     function defaultData() {
       return {
@@ -1334,6 +1462,7 @@
         lab: [],
         gallery: [],
         ideas: [],
+        tags: defaultTags,
         settings: { aiReady: true }
       };
     }
@@ -1489,6 +1618,126 @@
       return JSON.stringify(source || {}).toLowerCase().includes(query);
     }
 
+    function jsArg(value) {
+      return JSON.stringify(String(value || "")).replace(/</g, "\\u003c");
+    }
+
+    function tagArray(value) {
+      return String(value || "")
+        .split(",")
+        .map(tag => tag.trim())
+        .filter(Boolean)
+        .filter((tag, index, arr) => arr.findIndex(item => item.toLowerCase() === tag.toLowerCase()) === index);
+    }
+
+    function tagColor(name) {
+      const tag = (data.tags || []).find(item => item.name.toLowerCase() === String(name).toLowerCase());
+      return tag ? tag.color : "#f3dfbd";
+    }
+
+    function tagBadges(tags) {
+      return tagArray(tags).map(tag => `<button class="tag-badge" type="button" style="background:${escapeHtml(tagColor(tag))}" onclick="filterByTag(${jsArg(tag)})">${escapeHtml(tag)}</button>`).join("");
+    }
+
+    function filterByTag(tag) {
+      const search = document.getElementById("globalSearch");
+      search.value = tag;
+      renderGlobalSearch();
+      setSection("dashboard");
+    }
+
+    function ensureTagsFromText(text) {
+      tagArray(text).forEach(name => {
+        if (!(data.tags || []).some(tag => tag.name.toLowerCase() === name.toLowerCase())) {
+          data.tags.push({ id: uid("tag"), name, color: "#f3dfbd" });
+        }
+      });
+    }
+
+    function toggleInputTag(input, tagName) {
+      const tags = tagArray(input.value);
+      const index = tags.findIndex(tag => tag.toLowerCase() === tagName.toLowerCase());
+      if (index >= 0) tags.splice(index, 1);
+      else tags.push(tagName);
+      input.value = tags.join(", ");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      renderTagPickers();
+    }
+
+    function renderTagPickers() {
+      document.querySelectorAll('form input[name="tags"]').forEach(input => {
+        let picker = input.parentElement.querySelector(".tag-picker");
+        if (!picker) {
+          picker = document.createElement("div");
+          picker.className = "tag-picker";
+          input.insertAdjacentElement("afterend", picker);
+        }
+        const selected = tagArray(input.value).map(tag => tag.toLowerCase());
+        picker.innerHTML = (data.tags || []).map(tag => `<button class="tag-chip ${selected.includes(tag.name.toLowerCase()) ? "active" : ""}" type="button" onclick="toggleInputTagById(${jsArg(input.id || assignInputId(input))},${jsArg(tag.name)})">${escapeHtml(tag.name)}</button>`).join("");
+      });
+    }
+
+    function assignInputId(input) {
+      if (!input.id) input.id = uid("tagInput");
+      return input.id;
+    }
+
+    function toggleInputTagById(inputId, tagName) {
+      const input = document.getElementById(inputId);
+      if (input) toggleInputTag(input, tagName);
+    }
+
+    function renderTagManager() {
+      const list = document.getElementById("tagManagerList");
+      if (!list) return;
+      list.innerHTML = (data.tags || []).map(tag => `
+        <span class="tag-badge" style="background:${escapeHtml(tag.color)}">
+          ${escapeHtml(tag.name)}
+          <button class="btn secondary" type="button" onclick="editTag('${tag.id}')">Изм.</button>
+          <button class="btn danger" type="button" onclick="deleteTag('${tag.id}')">×</button>
+        </span>
+      `).join("") || `<div class="empty">Тегов пока нет.</div>`;
+      renderTagPickers();
+    }
+
+    function saveTagFromSettings() {
+      const nameInput = document.getElementById("tagName");
+      const colorInput = document.getElementById("tagColor");
+      const name = nameInput.value.trim();
+      if (!name) return toast("Введите название тега");
+      const editing = editingTagId ? data.tags.find(tag => tag.id === editingTagId) : null;
+      const existing = data.tags.find(tag => tag.name.toLowerCase() === name.toLowerCase() && tag.id !== editingTagId);
+      if (existing) {
+        existing.color = colorInput.value;
+      } else if (editing) {
+        editing.name = name;
+        editing.color = colorInput.value;
+      }
+      else data.tags.push({ id: uid("tag"), name, color: colorInput.value });
+      editingTagId = null;
+      nameInput.value = "";
+      colorInput.value = "#f3dfbd";
+      saveData();
+      toast("Тег сохранён");
+    }
+
+    function editTag(id) {
+      const tag = data.tags.find(item => item.id === id);
+      if (!tag) return;
+      editingTagId = id;
+      document.getElementById("tagName").value = tag.name;
+      document.getElementById("tagColor").value = tag.color;
+      setSection("settings");
+    }
+
+    function deleteTag(id) {
+      const tag = data.tags.find(item => item.id === id);
+      if (!tag || !confirm(`Удалить тег «${tag.name}»? Он останется в старых карточках как текст, но исчезнет из списка выбора.`)) return;
+      data.tags = data.tags.filter(item => item.id !== id);
+      saveData();
+      toast("Тег удалён");
+    }
+
     function setSection(id) {
       document.querySelectorAll(".section").forEach(section => section.classList.toggle("active", section.id === id));
       document.querySelectorAll(".nav button").forEach(button => button.classList.toggle("active", button.dataset.section === id));
@@ -1509,8 +1758,8 @@
     }
 
     function calculateRecipe(recipe) {
-      const ingredientsCost = recipe.ingredients.reduce((sum, row) => sum + calculateIngredient(row), 0);
-      const expensesCost = recipe.expenses.reduce((sum, row) => sum + number(row.qty) * number(row.price), 0);
+      const ingredientsCost = (recipe.ingredients || []).reduce((sum, row) => sum + calculateIngredient(row), 0);
+      const expensesCost = (recipe.expenses || []).reduce((sum, row) => sum + number(row.qty) * number(row.price), 0);
       const cost = ingredientsCost + expensesCost;
       let price = number(recipe.finalPrice);
       if (!price) price = cost + number(recipe.markupFixed) + cost * number(recipe.markupPercent) / 100;
@@ -1532,6 +1781,24 @@
 
     function volume(shape, length, width, height) {
       return area(shape, length, width) * number(height);
+    }
+
+    function coneVolume(topDiameter, bottomDiameter, height) {
+      const topRadius = number(topDiameter) / 2;
+      const bottomRadius = number(bottomDiameter) / 2;
+      const h = number(height);
+      if (!topRadius || !bottomRadius || !h) return 0;
+      return Math.PI * h * (Math.pow(bottomRadius, 2) + bottomRadius * topRadius + Math.pow(topRadius, 2)) / 3;
+    }
+
+    function recipeMeasure(shape, length, width, height, topDiameter, bottomDiameter, mode) {
+      if (shape === "конус") {
+        const top = topDiameter || length;
+        const bottom = bottomDiameter || width || length;
+        return coneVolume(top, bottom, height);
+      }
+      if (mode === "shape") return area(shape, length, width);
+      return volume(shape, length, width, height);
     }
 
     function getRows(tbody) {
@@ -1609,6 +1876,7 @@
     function buildRecipeFromForm(photo = "") {
       const form = document.getElementById("recipeForm");
       const values = getFormData(form);
+      ensureTagsFromText(values.tags);
       const previous = currentRecipeId ? data.recipes.find(item => item.id === currentRecipeId) : null;
       const recipe = {
         id: currentRecipeId || uid("recipe"),
@@ -1633,6 +1901,7 @@
       document.getElementById("expenseRows").innerHTML = "";
       ["Мука", "Сахар", "Сливки"].forEach(name => addIngredientRow({ name, unit: "г", basis: "за кг" }));
       expenseNames.slice(0, 4).forEach(name => addExpenseRow({ name, unit: "шт", qty: 1 }));
+      renderTagPickers();
       recalcRecipeForm();
     }
 
@@ -1668,11 +1937,12 @@
     function useRecipeInOrder(id) {
       const recipe = data.recipes.find(item => item.id === id);
       if (!recipe) return;
+      const totals = recipe.totals || calculateRecipe(recipe);
       setSection("orders");
       document.getElementById("orderRecipe").value = id;
       document.querySelector("#orderForm [name=weight]").value = recipe.baseWeight || "";
-      document.querySelector("#orderForm [name=price]").value = Math.round(recipe.totals.price || 0);
-      document.querySelector("#orderForm [name=cost]").value = Math.round(recipe.totals.cost || 0);
+      document.querySelector("#orderForm [name=price]").value = Math.round(totals.price || 0);
+      document.querySelector("#orderForm [name=cost]").value = Math.round(totals.cost || 0);
       closeModal();
     }
 
@@ -1686,7 +1956,7 @@
 
     function renderRecipes() {
       const query = document.getElementById("recipeSearch").value.toLowerCase();
-      const list = data.recipes.filter(recipe => `${recipe.title} ${recipe.category} ${recipe.notes}`.toLowerCase().includes(query));
+      const list = data.recipes.filter(recipe => `${recipe.title} ${recipe.category} ${recipe.notes} ${recipe.tags} ${recipe.improvements} ${(recipe.ingredients || []).map(row => row.name).join(" ")}`.toLowerCase().includes(query));
       document.getElementById("recipeList").innerHTML = list.length ? list.map(recipe => `
         <div class="item recipe-card">
           ${recipe.photo ? `<img class="thumb" src="${recipe.photo}" alt="">` : `<div class="thumb"></div>`}
@@ -1699,7 +1969,8 @@
               </div>
               <button class="btn secondary" onclick="openRecipe('${recipe.id}')">Открыть</button>
             </div>
-            <p class="muted">${number(recipe.baseWeight)} г · себестоимость ${money(recipe.totals.cost)} · цена ${money(recipe.totals.price)} · прибыль <span class="money">${money(recipe.totals.profit)}</span></p>
+            <div class="tag-bar">${tagBadges(recipe.tags)}</div>
+            <p class="muted">${number(recipe.baseWeight)} г · себестоимость ${money((recipe.totals || calculateRecipe(recipe)).cost)} · цена ${money((recipe.totals || calculateRecipe(recipe)).price)} · прибыль <span class="money">${money((recipe.totals || calculateRecipe(recipe)).profit)}</span></p>
             ${recipe.source ? `<a href="${escapeHtml(recipe.source)}" target="_blank" rel="noreferrer">Источник рецепта</a>` : ""}
             ${recipe.notes ? `<p>${escapeHtml(recipe.notes)}</p>` : ""}
           </div>
@@ -1718,6 +1989,7 @@
         </div>
         ${recipe.photo ? `<img class="thumb" style="width:100%;height:260px;margin-bottom:16px" src="${recipe.photo}" alt="">` : ""}
         <p><span class="pill">${escapeHtml(recipe.category)}</span> <span class="pill">Дата цен: ${escapeHtml(recipe.priceDate || "не указана")}</span> <span class="pill">${number(recipe.baseWeight)} г</span></p>
+        <div class="tag-bar">${tagBadges(recipe.tags)}</div>
         <div class="grid">
           <div class="card span-6"><h4>Ингредиенты</h4>${simpleTable(recipe.ingredients, ["name", "qty", "unit", "price", "basis"])}</div>
           <div class="card span-6"><h4>Расходы</h4>${simpleTable(recipe.expenses, ["name", "qty", "unit", "price"])}</div>
@@ -1750,6 +2022,7 @@
             <div class="item-head"><div><h4>${escapeHtml(client.name)}</h4><span class="muted">${escapeHtml(client.phone || "")}</span></div><span class="pill">${orders.length} заказов</span></div>
             <p>${[client.whatsapp && `WhatsApp: ${client.whatsapp}`, client.telegram && `Telegram: ${client.telegram}`, client.instagram && `Instagram: ${client.instagram}`].filter(Boolean).join(" · ")}</p>
             <p class="muted">${escapeHtml([client.likes, client.dislikes, client.allergies, client.fillings, client.importantDates, client.notes].filter(Boolean).join(" · "))}</p>
+            <div class="tag-bar">${tagBadges(client.tags)}</div>
             <h4>История взаимодействия</h4>
             ${orders.length ? orders.map(order => `<div class="pill">${escapeHtml(order.dueDate || order.orderDate || "без даты")} · ${escapeHtml(getRecipeName(order.recipeId))} · ${money(order.price)} · ${escapeHtml(order.review || "отзыв не записан")}</div>`).join(" ") : `<p class="muted">Заказов пока нет.</p>`}
           </div>`;
@@ -1768,6 +2041,7 @@
             </div>
             ${order.reference ? `<img class="thumb" style="width:100%;height:180px;margin-bottom:12px" src="${order.reference}" alt="">` : ""}
             <p>${escapeHtml(getRecipeName(order.recipeId))} · ${number(order.weight)} г · ${escapeHtml(order.occasion || "повод не указан")} · ${escapeHtml(order.filling || "")} · ${escapeHtml(order.decor || "")}</p>
+            <div class="tag-bar">${tagBadges(order.tags)}</div>
             <p>Стоимость: <span class="money">${money(order.price)}</span> · Себестоимость: ${money(order.cost)} · Прибыль: <span class="${profit >= 0 ? "success" : "warning"}">${money(profit)}</span> · Остаток оплаты: ${money(rest)}</p>
             <div class="actions"><button class="btn secondary" onclick="printHtml(orderPrintHtml('${order.id}'))">Печать заказа</button></div>
           </div>`;
@@ -1822,7 +2096,8 @@
             </div>
             <p class="muted">${escapeHtml(item.author || "Автор не указан")} · ${escapeHtml(item.source || "источник не указан")} · добавлено ${escapeHtml(item.addedAt || "")}</p>
             ${item.file ? `<p><span class="pill">${escapeHtml(item.file.name || "файл")}</span> <span class="muted">${formatBytes(item.file.size)} · ${escapeHtml(item.file.type || "формат не указан")}</span></p>` : ""}
-            <p>${escapeHtml([item.tags, item.notes, item.liked, item.change].filter(Boolean).join(" · "))}</p>
+            <div class="tag-bar">${tagBadges(item.tags)}</div>
+            <p>${escapeHtml([item.notes, item.liked, item.change].filter(Boolean).join(" · "))}</p>
             <div class="actions">
               ${item.file ? `<button class="btn secondary" type="button" onclick="openStoredFile('${collection}','${item.id}')">Открыть файл</button>` : ""}
               <button class="btn secondary" type="button" onclick="toggleFavorite('${collection}','${item.id}')">${item.favorite === "yes" ? "Убрать из избранного" : "В избранное"}</button>
@@ -1850,6 +2125,7 @@
           <div>
             <div class="item-head"><div><h4>${escapeHtml(item.title)}</h4><span class="pill">${escapeHtml(getRecipeName(item.recipeId))}</span>${item.isAuthor === "yes" ? `<span class="pill">авторский рецепт</span>` : ""}</div><span class="rating">${stars(item.rating)}</span></div>
             <p><strong>Цель:</strong> ${escapeHtml(item.goal || "не указана")}</p>
+            <div class="tag-bar">${tagBadges(item.tags)}</div>
             <p class="muted">${escapeHtml([item.versions, item.changes, item.result, item.feedback, item.conclusion].filter(Boolean).join(" · "))}</p>
             <div class="actions"><button class="btn secondary" type="button" onclick="saveExperimentAsRecipe('${item.id}')">Сохранить как новый рецепт</button></div>
           </div>
@@ -1862,7 +2138,7 @@
           ${item.photo ? `<img class="thumb" src="${item.photo}" alt="">` : `<div class="thumb">ФОТО</div>`}
           <div>
             <div class="item-head"><div><h4>${escapeHtml(item.title)}</h4><span class="pill">${escapeHtml(getClientName(item.clientId))}</span><span class="pill">${escapeHtml(item.date || "без даты")}</span>${item.portfolio === "yes" ? `<span class="pill">портфолио</span>` : ""}</div></div>
-            <p>${escapeHtml(item.comments || "")}</p><p class="muted">${escapeHtml(item.tags || "")}</p>
+            <div class="tag-bar">${tagBadges(item.tags)}</div><p>${escapeHtml(item.comments || "")}</p>
           </div>
         </div>`).join("") : `<div class="empty">Галерея пока пустая.</div>`;
     }
@@ -1875,7 +2151,7 @@
           ${item.photo ? `<img class="thumb" src="${item.photo}" alt="">` : `<div class="thumb">IDEA</div>`}
           <div><div class="item-head"><div><h4>${escapeHtml(item.title)}</h4><span class="pill">${escapeHtml(item.type)}</span></div></div>
           ${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noreferrer">Источник идеи</a>` : ""}
-          <p>${escapeHtml(item.notes || "")}</p><p class="muted">${escapeHtml(item.tags || "")}</p></div>
+          <div class="tag-bar">${tagBadges(item.tags)}</div><p>${escapeHtml(item.notes || "")}</p></div>
         </div>`).join("") : `<div class="empty">Идей пока нет.</div>`;
     }
 
@@ -1961,7 +2237,7 @@
       document.getElementById("dashboardAlerts").innerHTML = alerts.length ? alerts.map(alert => `<div class="item">${escapeHtml(alert)}</div>`).join("") : `<div class="empty">Критичных предупреждений нет.</div>`;
       const recentMaterials = [...data.pastryLibrary, ...data.culinaryLibrary].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 5);
       document.getElementById("recentMaterials").innerHTML = recentMaterials.length ? recentMaterials.map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.category || "")} · ${escapeHtml(item.author || "")}</span></div>`).join("") : `<div class="empty">Материалов пока нет.</div>`;
-      document.getElementById("recentRecipes").innerHTML = data.recipes.slice(0, 5).length ? data.recipes.slice(0, 5).map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.category || "")} · ${money((item.totals || {}).price)}</span></div>`).join("") : `<div class="empty">Рецептов пока нет.</div>`;
+      document.getElementById("recentRecipes").innerHTML = data.recipes.slice(0, 5).length ? data.recipes.slice(0, 5).map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.category || "")} · ${money((item.totals || calculateRecipe(item)).price)}</span></div>`).join("") : `<div class="empty">Рецептов пока нет.</div>`;
     }
 
     function isDateSoon(date) {
@@ -2009,7 +2285,7 @@
 
     function renderSelects() {
       fillSelect(document.getElementById("recalcRecipe"), data.recipes, "Выберите рецепт", r => r.title);
-      fillSelect(document.getElementById("orderRecipe"), data.recipes, "Без рецепта", r => `${r.title} · ${money((r.totals || {}).price)}`);
+      fillSelect(document.getElementById("orderRecipe"), data.recipes, "Без рецепта", r => `${r.title} · ${money((r.totals || calculateRecipe(r)).price)}`);
       fillSelect(document.getElementById("orderClient"), data.clients, "Без клиента", c => c.name);
       fillSelect(document.getElementById("printRecipe"), data.recipes, "Выберите рецепт", r => r.title);
       fillSelect(document.getElementById("printOrder"), data.orders, "Выберите заказ", o => `${getClientName(o.clientId)} · ${o.dueDate || "без даты"}`);
@@ -2042,6 +2318,7 @@
       renderGlobalSearch();
       renderAnalytics();
       renderSelects();
+      renderTagManager();
     }
 
     function runRecalc() {
@@ -2050,11 +2327,22 @@
       const mode = document.getElementById("recalcMode").value;
       let ratio = 1;
       if (mode === "weight") ratio = number(document.getElementById("newWeight").value) / number(recipe.baseWeight);
-      if (mode === "shape") ratio = area(document.getElementById("newShape").value, document.getElementById("newLength").value, document.getElementById("newWidth").value) / area(recipe.shape, recipe.length, recipe.width);
-      if (mode === "volume") ratio = volume(document.getElementById("newShape").value, document.getElementById("newLength").value, document.getElementById("newWidth").value, document.getElementById("newHeight").value) / volume(recipe.shape, recipe.length, recipe.width, recipe.height);
+      if (mode === "shape" || mode === "volume") {
+        const sourceMeasure = recipeMeasure(recipe.shape, recipe.length, recipe.width, recipe.height, recipe.topDiameter, recipe.bottomDiameter, mode);
+        const targetMeasure = recipeMeasure(
+          document.getElementById("newShape").value,
+          document.getElementById("newLength").value,
+          document.getElementById("newWidth").value,
+          document.getElementById("newHeight").value,
+          document.getElementById("newTopDiameter").value,
+          document.getElementById("newBottomDiameter").value,
+          mode
+        );
+        ratio = targetMeasure / sourceMeasure;
+      }
       if (!isFinite(ratio) || ratio <= 0) return toast("Заполните исходные и новые размеры для пересчёта");
-      document.getElementById("recalcSummary").innerHTML = `<strong>Коэффициент пересчёта:</strong> ${ratio.toFixed(3)}`;
-      document.getElementById("recalcRows").innerHTML = recipe.ingredients.map(row => `<tr><td>${escapeHtml(row.name)}</td><td>${number(row.qty)} ${escapeHtml(row.unit)}</td><td class="money">${(number(row.qty) * ratio).toFixed(2)} ${escapeHtml(row.unit)}</td></tr>`).join("");
+      document.getElementById("recalcSummary").innerHTML = `<strong>Коэффициент пересчёта:</strong> ${ratio.toFixed(3)}<br><span class="muted">${mode === "weight" ? "Расчёт по весу" : recipe.shape === "конус" || document.getElementById("newShape").value === "конус" ? "Для конуса использован точный объём усечённого конуса" : mode === "shape" ? "Расчёт по площади формы" : "Расчёт по объёму формы"}</span>`;
+      document.getElementById("recalcRows").innerHTML = (recipe.ingredients || []).map(row => `<tr><td>${escapeHtml(row.name)}</td><td>${number(row.qty)} ${escapeHtml(row.unit)}</td><td class="money">${(number(row.qty) * ratio).toFixed(2)} ${escapeHtml(row.unit)}</td></tr>`).join("");
     }
 
     function openModal(html) {
@@ -2186,6 +2474,10 @@
       if (button) setSection(button.dataset.section);
     });
 
+    document.addEventListener("input", event => {
+      if (event.target.matches('input[name="tags"]')) renderTagPickers();
+    });
+
     document.getElementById("addIngredient").addEventListener("click", () => addIngredientRow());
     document.getElementById("addExpense").addEventListener("click", () => addExpenseRow());
     document.getElementById("clearRecipe").addEventListener("click", clearRecipeForm);
@@ -2234,6 +2526,7 @@
       renderGlobalSearch();
     });
     document.getElementById("runRecalc").addEventListener("click", runRecalc);
+    document.getElementById("saveTag").addEventListener("click", saveTagFromSettings);
 
     document.querySelectorAll(".library-form").forEach(form => {
       form.elements.file.addEventListener("change", event => {
@@ -2248,6 +2541,7 @@
         const type = event.target.dataset.type;
         const key = type === "pastry" ? "pastryLibrary" : "culinaryLibrary";
         const values = getFormData(event.target);
+        ensureTagsFromText(values.tags);
         const cover = await readImage(event.target.elements.cover);
         const dishPhoto = await readImage(event.target.elements.dishPhoto);
         const file = await storeUpload(event.target.elements.file);
@@ -2271,7 +2565,9 @@
 
     document.getElementById("clientForm").addEventListener("submit", event => {
       event.preventDefault();
-      const client = { id: uid("client"), createdAt: new Date().toISOString(), ...getFormData(event.target) };
+      const values = getFormData(event.target);
+      ensureTagsFromText(values.tags);
+      const client = { id: uid("client"), createdAt: new Date().toISOString(), ...values };
       data.clients.unshift(client);
       event.target.reset();
       saveData();
@@ -2281,9 +2577,10 @@
     document.getElementById("orderRecipe").addEventListener("change", event => {
       const recipe = data.recipes.find(item => item.id === event.target.value);
       if (!recipe) return;
+      const totals = recipe.totals || calculateRecipe(recipe);
       document.querySelector("#orderForm [name=weight]").value = recipe.baseWeight || "";
-      document.querySelector("#orderForm [name=price]").value = Math.round(recipe.totals.price || 0);
-      document.querySelector("#orderForm [name=cost]").value = Math.round(recipe.totals.cost || 0);
+      document.querySelector("#orderForm [name=price]").value = Math.round(totals.price || 0);
+      document.querySelector("#orderForm [name=cost]").value = Math.round(totals.cost || 0);
     });
 
     document.getElementById("orderClient").addEventListener("change", event => {
@@ -2297,6 +2594,7 @@
     document.getElementById("orderForm").addEventListener("submit", async event => {
       event.preventDefault();
       const values = getFormData(event.target);
+      ensureTagsFromText(values.tags);
       const checklist = [...document.querySelectorAll("#orderChecklist input:checked")].map(input => input.value);
       const reference = await readImage(event.target.elements.reference);
       data.orders.unshift({ id: uid("order"), createdAt: new Date().toISOString(), ...values, checklist, reference });
@@ -2325,7 +2623,9 @@
     document.getElementById("labForm").addEventListener("submit", async event => {
       event.preventDefault();
       const photo = await readImage(event.target.elements.photo);
-      data.lab.unshift({ id: uid("lab"), createdAt: new Date().toISOString(), ...getFormData(event.target), photo });
+      const values = getFormData(event.target);
+      ensureTagsFromText(values.tags);
+      data.lab.unshift({ id: uid("lab"), createdAt: new Date().toISOString(), ...values, photo });
       event.target.reset();
       saveData();
       toast("Эксперимент сохранён");
@@ -2334,7 +2634,9 @@
     document.getElementById("galleryForm").addEventListener("submit", async event => {
       event.preventDefault();
       const photo = await readImage(event.target.elements.photo);
-      data.gallery.unshift({ id: uid("gallery"), createdAt: new Date().toISOString(), ...getFormData(event.target), photo });
+      const values = getFormData(event.target);
+      ensureTagsFromText(values.tags);
+      data.gallery.unshift({ id: uid("gallery"), createdAt: new Date().toISOString(), ...values, photo });
       event.target.reset();
       saveData();
       toast("Работа добавлена в галерею");
@@ -2343,7 +2645,9 @@
     document.getElementById("ideaForm").addEventListener("submit", async event => {
       event.preventDefault();
       const photo = await readImage(event.target.elements.photo);
-      data.ideas.unshift({ id: uid("idea"), createdAt: new Date().toISOString(), ...getFormData(event.target), photo });
+      const values = getFormData(event.target);
+      ensureTagsFromText(values.tags);
+      data.ideas.unshift({ id: uid("idea"), createdAt: new Date().toISOString(), ...values, photo });
       event.target.reset();
       saveData();
       toast("Идея сохранена");
@@ -2366,7 +2670,7 @@
       reader.onload = () => {
         try {
           const imported = JSON.parse(reader.result);
-          data = { recipes: [], clients: [], orders: [], stock: [], ...imported };
+          data = { ...defaultData(), ...imported };
           saveData();
           toast("Данные импортированы");
         } catch (error) {
@@ -2410,6 +2714,10 @@
     window.deleteMaterial = deleteMaterial;
     window.saveExperimentAsRecipe = saveExperimentAsRecipe;
     window.setHelpQuery = setHelpQuery;
+    window.toggleInputTagById = toggleInputTagById;
+    window.filterByTag = filterByTag;
+    window.editTag = editTag;
+    window.deleteTag = deleteTag;
 
     clearRecipeForm();
     renderAll();
