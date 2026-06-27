@@ -72,6 +72,20 @@
       overflow-y: auto;
     }
 
+    .mobile-menu-toggle {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 45;
+      width: calc(100% - 24px);
+      margin: 12px;
+      min-height: 48px;
+      border-radius: 18px;
+      color: var(--milk);
+      background: linear-gradient(145deg, var(--chocolate), var(--caramel-dark));
+      box-shadow: 0 12px 28px rgba(79, 51, 40, .18);
+    }
+
     .brand {
       display: flex;
       gap: 14px;
@@ -627,6 +641,8 @@
 
     .help-card li + li { margin-top: 5px; }
 
+    .is-hidden { display: none !important; }
+
     @media (max-width: 1100px) {
       .app { grid-template-columns: 1fr; }
       .sidebar {
@@ -641,13 +657,23 @@
     }
 
     @media (max-width: 720px) {
+      .app { display: block; }
+      .mobile-menu-toggle { display: block; }
       main { padding: 18px 12px 40px; }
       .sidebar {
+        display: none;
+        position: fixed;
+        inset: 64px 8px auto;
+        z-index: 44;
         padding: 14px 12px;
-        max-height: 56vh;
+        max-height: calc(100vh - 78px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: 0 24px 60px rgba(51,37,31,.24);
       }
+      body.menu-open .sidebar { display: block; }
       .brand { margin-bottom: 12px; }
       .brand-mark { width: 46px; height: 46px; border-radius: 16px; }
       .brand h1 { font-size: 21px; }
@@ -703,6 +729,7 @@
   </style>
 </head>
 <body>
+  <button class="mobile-menu-toggle no-print" id="mobileMenuToggle" type="button">☰ Меню</button>
   <div class="app">
     <aside class="sidebar no-print">
       <div class="brand">
@@ -854,7 +881,7 @@
               <div class="field col-12"><label>Теги</label><input name="tags" placeholder="Фисташка, Проверено, Для продажи"></div>
               <div class="field col-3"><label>Базовый вес, г</label><input name="baseWeight" type="number" min="0" step="1" value="1000"></div>
               <div class="field col-3"><label>Порций / штук</label><input name="servings" type="number" min="0" step="1" value="8"></div>
-              <div class="field col-3"><label>Форма</label><select name="shape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option><option>конус</option></select></div>
+              <div class="field col-3"><label>Форма</label><select name="shape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option><option>конус</option><option>полусфера</option><option>многоярусный торт</option><option>известный объём формы</option></select></div>
               <div class="field col-3"><label>Диаметр / длина, см</label><input name="length" type="number" min="0" step="0.1"></div>
               <div class="field col-3"><label>Ширина, см</label><input name="width" type="number" min="0" step="0.1"></div>
               <div class="field col-3"><label>Высота, см</label><input name="height" type="number" min="0" step="0.1"></div>
@@ -929,28 +956,32 @@
           <div class="card span-5">
             <h3>Пересчёт рецепта</h3>
             <div class="field"><label>Рецепт</label><select id="recalcRecipe"></select></div>
-            <div class="field"><label>Метод</label><select id="recalcMode"><option value="weight">по весу</option><option value="shape">по площади формы</option><option value="volume">по объёму формы</option></select></div>
+            <div class="field"><label>Метод</label><select id="recalcMode"><option value="weight">по весу</option><option value="shape">по площади формы</option><option value="volume">по объёму формы</option><option value="knownVolume">по известному объёму формы</option></select></div>
             <div class="item" id="recalcSourceInfo" style="margin-bottom:14px">Выберите рецепт, чтобы увидеть исходные данные.</div>
-            <h4>Исходные данные рецепта</h4>
-            <p class="muted">Поля ниже заполняются автоматически из карточки рецепта. Если в старом рецепте размеры не были указаны, заполните их здесь для пересчёта.</p>
-            <div class="row">
-              <div class="field col-6"><label>Исходный вес, г</label><input id="sourceWeight" type="number" min="0" step="1"></div>
-              <div class="field col-6"><label>Исходная форма</label><select id="sourceShape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option><option>конус</option></select></div>
-              <div class="field col-4"><label>Исходный диаметр / длина, см</label><input id="sourceLength" type="number" min="0" step="0.1"></div>
-              <div class="field col-4"><label>Исходная ширина, см</label><input id="sourceWidth" type="number" min="0" step="0.1"></div>
-              <div class="field col-4"><label>Исходная высота, см</label><input id="sourceHeight" type="number" min="0" step="0.1"></div>
-              <div class="field col-6"><label>Исходный конус: верхний диаметр, см</label><input id="sourceTopDiameter" type="number" min="0" step="0.1"></div>
-              <div class="field col-6"><label>Исходный конус: нижний диаметр, см</label><input id="sourceBottomDiameter" type="number" min="0" step="0.1"></div>
+            <h4 id="sourceParamsTitle">Исходные данные рецепта</h4>
+            <p class="muted" id="sourceParamsHint">Поля ниже заполняются автоматически из карточки рецепта. Если в старом рецепте размеры не были указаны, заполните их здесь для пересчёта.</p>
+            <div class="row" id="sourceParams">
+              <div class="field col-6" data-recalc-source="weight"><label>Исходный вес, г</label><input id="sourceWeight" type="number" min="0" step="1"></div>
+              <div class="field col-6" data-recalc-source="shape"><label>Исходная форма</label><select id="sourceShape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option><option>конус</option><option>полусфера</option><option>многоярусный торт</option><option>известный объём формы</option></select></div>
+              <div class="field col-4" data-recalc-source="length"><label>Исходный диаметр / длина, см</label><input id="sourceLength" type="number" min="0" step="0.1"></div>
+              <div class="field col-4" data-recalc-source="width"><label>Исходная ширина, см</label><input id="sourceWidth" type="number" min="0" step="0.1"></div>
+              <div class="field col-4" data-recalc-source="height"><label>Исходная высота, см</label><input id="sourceHeight" type="number" min="0" step="0.1"></div>
+              <div class="field col-6" data-recalc-source="top"><label>Исходный конус: верхний диаметр, см</label><input id="sourceTopDiameter" type="number" min="0" step="0.1"></div>
+              <div class="field col-6" data-recalc-source="bottom"><label>Исходный конус: нижний диаметр, см</label><input id="sourceBottomDiameter" type="number" min="0" step="0.1"></div>
+              <div class="field col-12" data-recalc-source="knownVolume"><label>Исходный объём формы, мл</label><input id="sourceKnownVolume" type="number" min="0" step="1"></div>
+              <div class="field col-12" data-recalc-source="tiers"><label>Исходные ярусы</label><div class="list" id="sourceTierRows"></div><button class="btn secondary" id="addSourceTier" type="button">Добавить исходный ярус</button></div>
             </div>
             <h4>Новые данные</h4>
-            <div class="row">
-              <div class="field col-6"><label>Новый вес, г</label><input id="newWeight" type="number" min="0" step="1"></div>
-              <div class="field col-6"><label>Новая форма</label><select id="newShape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option><option>конус</option></select></div>
-              <div class="field col-4"><label>Диаметр / длина, см</label><input id="newLength" type="number" min="0" step="0.1"></div>
-              <div class="field col-4"><label>Ширина, см</label><input id="newWidth" type="number" min="0" step="0.1"></div>
-              <div class="field col-4"><label>Высота, см</label><input id="newHeight" type="number" min="0" step="0.1"></div>
-              <div class="field col-6"><label>Конус: верхний диаметр, см</label><input id="newTopDiameter" type="number" min="0" step="0.1"></div>
-              <div class="field col-6"><label>Конус: нижний диаметр, см</label><input id="newBottomDiameter" type="number" min="0" step="0.1"></div>
+            <div class="row" id="targetParams">
+              <div class="field col-6" data-recalc-target="weight"><label>Новый вес, г</label><input id="newWeight" type="number" min="0" step="1"></div>
+              <div class="field col-6" data-recalc-target="shape"><label>Новая форма</label><select id="newShape"><option>круглая</option><option>квадратная</option><option>прямоугольная</option><option>овальная</option><option>конус</option><option>полусфера</option><option>многоярусный торт</option><option>известный объём формы</option></select></div>
+              <div class="field col-4" data-recalc-target="length"><label>Диаметр / длина, см</label><input id="newLength" type="number" min="0" step="0.1"></div>
+              <div class="field col-4" data-recalc-target="width"><label>Ширина, см</label><input id="newWidth" type="number" min="0" step="0.1"></div>
+              <div class="field col-4" data-recalc-target="height"><label>Высота, см</label><input id="newHeight" type="number" min="0" step="0.1"></div>
+              <div class="field col-6" data-recalc-target="top"><label>Конус: верхний диаметр, см</label><input id="newTopDiameter" type="number" min="0" step="0.1"></div>
+              <div class="field col-6" data-recalc-target="bottom"><label>Конус: нижний диаметр, см</label><input id="newBottomDiameter" type="number" min="0" step="0.1"></div>
+              <div class="field col-12" data-recalc-target="knownVolume"><label>Новый объём формы, мл</label><input id="newKnownVolume" type="number" min="0" step="1"></div>
+              <div class="field col-12" data-recalc-target="tiers"><label>Новые ярусы</label><div class="list" id="newTierRows"></div><button class="btn secondary" id="addNewTier" type="button">Добавить новый ярус</button></div>
             </div>
             <div class="actions"><button class="btn" id="runRecalc" type="button">Пересчитать</button></div>
             <div class="item" id="recalcSummary" style="margin-top:14px"></div>
@@ -1754,6 +1785,7 @@
     function setSection(id) {
       document.querySelectorAll(".section").forEach(section => section.classList.toggle("active", section.id === id));
       document.querySelectorAll(".nav button").forEach(button => button.classList.toggle("active", button.dataset.section === id));
+      document.body.classList.remove("menu-open");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -1804,14 +1836,55 @@
       return Math.PI * h * (Math.pow(bottomRadius, 2) + bottomRadius * topRadius + Math.pow(topRadius, 2)) / 3;
     }
 
+    function hemisphereVolume(diameter) {
+      const radius = number(diameter) / 2;
+      if (!radius) return 0;
+      return 2 * Math.PI * Math.pow(radius, 3) / 3;
+    }
+
     function recipeMeasure(shape, length, width, height, topDiameter, bottomDiameter, mode) {
       if (shape === "конус") {
         const top = topDiameter || length;
         const bottom = bottomDiameter || width || length;
         return coneVolume(top, bottom, height);
       }
+      if (shape === "полусфера") {
+        return mode === "shape" ? area("круглая", length, width) : hemisphereVolume(length);
+      }
       if (mode === "shape") return area(shape, length, width);
       return volume(shape, length, width, height);
+    }
+
+    function tierVolumeFromRow(row) {
+      const shape = row.querySelector("[data-tier=shape]").value;
+      const length = row.querySelector("[data-tier=length]").value;
+      const width = row.querySelector("[data-tier=width]").value;
+      const height = row.querySelector("[data-tier=height]").value;
+      const top = row.querySelector("[data-tier=top]").value;
+      const bottom = row.querySelector("[data-tier=bottom]").value;
+      return recipeMeasure(shape, length, width, height, top, bottom, "volume");
+    }
+
+    function totalTierVolume(prefix) {
+      return [...document.querySelectorAll(`#${prefix}TierRows .tier-row`)].reduce((sum, row) => sum + tierVolumeFromRow(row), 0);
+    }
+
+    function addTierRow(prefix, row = {}) {
+      const container = document.getElementById(`${prefix}TierRows`);
+      const div = document.createElement("div");
+      div.className = "item tier-row";
+      div.innerHTML = `
+        <div class="row">
+          <div class="field col-3"><label>Форма яруса</label><select data-tier="shape"><option ${row.shape === "круглая" ? "selected" : ""}>круглая</option><option ${row.shape === "квадратная" ? "selected" : ""}>квадратная</option><option ${row.shape === "прямоугольная" ? "selected" : ""}>прямоугольная</option><option ${row.shape === "овальная" ? "selected" : ""}>овальная</option><option ${row.shape === "конус" ? "selected" : ""}>конус</option><option ${row.shape === "полусфера" ? "selected" : ""}>полусфера</option></select></div>
+          <div class="field col-3"><label>Диаметр / длина, см</label><input data-tier="length" type="number" min="0" step="0.1" value="${row.length || ""}"></div>
+          <div class="field col-3"><label>Ширина, см</label><input data-tier="width" type="number" min="0" step="0.1" value="${row.width || ""}"></div>
+          <div class="field col-3"><label>Высота, см</label><input data-tier="height" type="number" min="0" step="0.1" value="${row.height || ""}"></div>
+          <div class="field col-6"><label>Конус: верхний диаметр, см</label><input data-tier="top" type="number" min="0" step="0.1" value="${row.top || ""}"></div>
+          <div class="field col-6"><label>Конус: нижний диаметр, см</label><input data-tier="bottom" type="number" min="0" step="0.1" value="${row.bottom || ""}"></div>
+        </div>
+        <button class="btn secondary" type="button" data-remove-tier>Удалить ярус</button>
+      `;
+      container.appendChild(div);
     }
 
     function getRows(tbody) {
@@ -2318,7 +2391,7 @@
       const recipe = selectedRecalcRecipe();
       if (!recipe) {
         document.getElementById("recalcSourceInfo").innerHTML = "Выберите рецепт, чтобы увидеть исходные данные.";
-        ["sourceWeight", "sourceLength", "sourceWidth", "sourceHeight", "sourceTopDiameter", "sourceBottomDiameter", "newWeight"].forEach(id => setFieldValue(id, ""));
+        ["sourceWeight", "sourceLength", "sourceWidth", "sourceHeight", "sourceTopDiameter", "sourceBottomDiameter", "sourceKnownVolume", "newWeight", "newKnownVolume"].forEach(id => setFieldValue(id, ""));
         document.getElementById("recalcRows").innerHTML = "";
         document.getElementById("recalcSummary").innerHTML = "";
         return;
@@ -2331,6 +2404,7 @@
       setFieldValue("sourceHeight", recipe.height);
       setFieldValue("sourceTopDiameter", recipe.topDiameter || recipe.length);
       setFieldValue("sourceBottomDiameter", recipe.bottomDiameter || recipe.width || recipe.length);
+      setFieldValue("sourceKnownVolume", recipe.knownVolume);
       setFieldValue("newWeight", recipe.baseWeight);
       document.getElementById("newShape").value = sourceShape;
       setFieldValue("newLength", recipe.length);
@@ -2338,15 +2412,20 @@
       setFieldValue("newHeight", recipe.height);
       setFieldValue("newTopDiameter", recipe.topDiameter || recipe.length);
       setFieldValue("newBottomDiameter", recipe.bottomDiameter || recipe.width || recipe.length);
+      setFieldValue("newKnownVolume", recipe.knownVolume);
       document.getElementById("recalcSourceInfo").innerHTML = `
         <strong>${escapeHtml(recipe.title || "Рецепт")}</strong><br>
         <span class="muted">Вес: ${number(recipe.baseWeight) || "не указан"} г · форма: ${escapeHtml(sourceShape)} · длина/диаметр: ${recipe.length || "не указано"} см · ширина: ${recipe.width || "не указано"} см · высота: ${recipe.height || "не указано"} см${sourceShape === "конус" ? ` · верхний диаметр: ${recipe.topDiameter || recipe.length || "не указано"} см · нижний диаметр: ${recipe.bottomDiameter || recipe.width || recipe.length || "не указано"} см` : ""}</span>
       `;
+      updateRecalcVisibility();
     }
 
     function missingRecalcFields(mode, prefix, shape) {
       const get = id => number(document.getElementById(`${prefix}${id}`).value);
       if (mode === "weight") return get("Weight") ? [] : ["вес"];
+      if (mode === "knownVolume" || shape === "известный объём формы") return get("KnownVolume") ? [] : ["объём формы"];
+      if (shape === "многоярусный торт") return totalTierVolume(prefix) > 0 ? [] : ["минимум один корректно заполненный ярус"];
+      if (shape === "полусфера") return get("Length") ? [] : ["диаметр полусферы"];
       if (shape === "конус") {
         return [
           ["TopDiameter", "верхний диаметр конуса"],
@@ -2362,6 +2441,49 @@
       const fields = [["Length", "длина / диаметр"], ["Width", "ширина"]];
       if (mode === "volume") fields.push(["Height", "высота"]);
       return fields.filter(([id]) => !get(id)).map(([, label]) => label);
+    }
+
+    function recalcKeysFor(mode, shape) {
+      if (mode === "weight") return ["weight"];
+      if (mode === "knownVolume" || shape === "известный объём формы") return ["knownVolume"];
+      if (shape === "многоярусный торт") return ["shape", "tiers"];
+      if (shape === "полусфера") return ["shape", "length"];
+      if (shape === "конус") return ["shape", "top", "bottom", "height"];
+      if (shape === "круглая" || shape === "квадратная") {
+        return mode === "volume" ? ["shape", "length", "height"] : ["shape", "length"];
+      }
+      return mode === "volume" ? ["shape", "length", "width", "height"] : ["shape", "length", "width"];
+    }
+
+    function setRecalcGroupVisibility(prefix, keys) {
+      document.querySelectorAll(`[data-recalc-${prefix}]`).forEach(field => {
+        field.classList.toggle("is-hidden", !keys.includes(field.dataset[`recalc${prefix[0].toUpperCase()}${prefix.slice(1)}`]));
+      });
+    }
+
+    function hasRecipeSourceData(recipe, mode, shape) {
+      if (!recipe) return false;
+      if (mode === "weight") return Boolean(number(recipe.baseWeight));
+      return missingRecalcFields(mode, "source", shape).length === 0;
+    }
+
+    function updateRecalcVisibility() {
+      const mode = document.getElementById("recalcMode").value;
+      const recipe = selectedRecalcRecipe();
+      const sourceShape = document.getElementById("sourceShape").value || (recipe && recipe.shape) || "круглая";
+      const targetShape = document.getElementById("newShape").value || sourceShape;
+      const sourceKeys = recalcKeysFor(mode, sourceShape);
+      const targetKeys = recalcKeysFor(mode, targetShape);
+      const sourceComplete = hasRecipeSourceData(recipe, mode, sourceShape);
+
+      setRecalcGroupVisibility("source", sourceKeys);
+      setRecalcGroupVisibility("target", targetKeys);
+      document.getElementById("sourceParams").classList.toggle("is-hidden", Boolean(recipe && sourceComplete));
+      document.getElementById("sourceParamsTitle").classList.toggle("is-hidden", Boolean(recipe && sourceComplete));
+      document.getElementById("sourceParamsHint").classList.toggle("is-hidden", Boolean(recipe && sourceComplete));
+      document.getElementById("recalcSourceInfo").innerHTML = recipe && sourceComplete
+        ? document.getElementById("recalcSourceInfo").innerHTML
+        : (recipe ? document.getElementById("recalcSourceInfo").innerHTML : "Выберите рецепт, чтобы увидеть исходные данные.");
     }
 
     function getRecipeName(id) {
@@ -2408,33 +2530,44 @@
         return toast(`Не хватает: ${parts.join("; ")}`);
       }
       let ratio = 1;
+      let sourceMeasure = 0;
+      let targetMeasure = 0;
+      let measureLabel = "";
       if (mode === "weight") ratio = number(document.getElementById("newWeight").value) / number(document.getElementById("sourceWeight").value);
+      if (mode === "knownVolume" || sourceShape === "известный объём формы" || targetShape === "известный объём формы") {
+        sourceMeasure = number(document.getElementById("sourceKnownVolume").value);
+        targetMeasure = number(document.getElementById("newKnownVolume").value);
+        measureLabel = "объём, мл";
+        ratio = targetMeasure / sourceMeasure;
+      }
       if (mode === "shape" || mode === "volume") {
-        const sourceMeasure = recipeMeasure(
-          sourceShape,
-          document.getElementById("sourceLength").value,
-          document.getElementById("sourceWidth").value,
-          document.getElementById("sourceHeight").value,
-          document.getElementById("sourceTopDiameter").value,
-          document.getElementById("sourceBottomDiameter").value,
-          mode
-        );
-        const targetMeasure = recipeMeasure(
-          targetShape,
-          document.getElementById("newLength").value,
-          document.getElementById("newWidth").value,
-          document.getElementById("newHeight").value,
-          document.getElementById("newTopDiameter").value,
-          document.getElementById("newBottomDiameter").value,
-          mode
-        );
+        const volumeOnlyShape = [sourceShape, targetShape].some(shape => ["конус", "полусфера", "многоярусный торт"].includes(shape));
+        sourceMeasure = sourceShape === "многоярусный торт" ? totalTierVolume("source") : recipeMeasure(
+            sourceShape,
+            document.getElementById("sourceLength").value,
+            document.getElementById("sourceWidth").value,
+            document.getElementById("sourceHeight").value,
+            document.getElementById("sourceTopDiameter").value,
+            document.getElementById("sourceBottomDiameter").value,
+            mode
+          );
+        targetMeasure = targetShape === "многоярусный торт" ? totalTierVolume("new") : recipeMeasure(
+            targetShape,
+            document.getElementById("newLength").value,
+            document.getElementById("newWidth").value,
+            document.getElementById("newHeight").value,
+            document.getElementById("newTopDiameter").value,
+            document.getElementById("newBottomDiameter").value,
+            mode
+          );
+        measureLabel = mode === "shape" && !volumeOnlyShape ? "площадь, см²" : "объём, см³";
         ratio = targetMeasure / sourceMeasure;
       }
       if (!isFinite(ratio) || ratio <= 0) {
         document.getElementById("recalcSummary").innerHTML = `<span class="warning">Не удалось рассчитать коэффициент. Проверьте, что исходные и новые значения больше нуля.</span>`;
         return toast("Проверьте размеры: значения должны быть больше нуля");
       }
-      document.getElementById("recalcSummary").innerHTML = `<strong>Коэффициент пересчёта:</strong> ${ratio.toFixed(3)}<br><span class="muted">${mode === "weight" ? "Расчёт по весу" : sourceShape === "конус" || targetShape === "конус" ? "Для конуса использован точный объём усечённого конуса" : mode === "shape" ? "Расчёт по площади формы" : "Расчёт по объёму формы"}</span>`;
+      document.getElementById("recalcSummary").innerHTML = `<strong>Коэффициент пересчёта:</strong> ${ratio.toFixed(3)}<br><span class="muted">${mode === "weight" ? `Вес: ${number(document.getElementById("sourceWeight").value)} г → ${number(document.getElementById("newWeight").value)} г` : `${measureLabel}: ${sourceMeasure.toFixed(2)} → ${targetMeasure.toFixed(2)}`}<br>${mode === "weight" ? "Расчёт по весу" : mode === "knownVolume" ? "Расчёт по известному объёму формы" : sourceShape === "многоярусный торт" || targetShape === "многоярусный торт" ? "Расчёт по суммарному объёму всех ярусов" : sourceShape === "полусфера" || targetShape === "полусфера" ? "Для полусферы использована формула V = 2/3 × π × r³" : sourceShape === "конус" || targetShape === "конус" ? "Для конуса использован точный объём усечённого конуса" : mode === "shape" ? "Расчёт по площади формы" : "Расчёт по объёму формы"}</span>`;
       document.getElementById("recalcRows").innerHTML = (recipe.ingredients || []).map(row => `<tr><td>${escapeHtml(row.name)}</td><td>${number(row.qty)} ${escapeHtml(row.unit)}</td><td class="money">${(number(row.qty) * ratio).toFixed(2)} ${escapeHtml(row.unit)}</td></tr>`).join("");
     }
 
@@ -2566,6 +2699,9 @@
       const button = event.target.closest("button[data-section]");
       if (button) setSection(button.dataset.section);
     });
+    document.getElementById("mobileMenuToggle").addEventListener("click", () => {
+      document.body.classList.toggle("menu-open");
+    });
 
     document.addEventListener("input", event => {
       if (event.target.matches('input[name="tags"]')) renderTagPickers();
@@ -2619,6 +2755,17 @@
       renderGlobalSearch();
     });
     document.getElementById("recalcRecipe").addEventListener("change", populateRecalcSource);
+    document.getElementById("recalcMode").addEventListener("change", updateRecalcVisibility);
+    document.getElementById("sourceShape").addEventListener("change", updateRecalcVisibility);
+    document.getElementById("newShape").addEventListener("change", updateRecalcVisibility);
+    document.getElementById("addSourceTier").addEventListener("click", () => addTierRow("source"));
+    document.getElementById("addNewTier").addEventListener("click", () => addTierRow("new"));
+    document.getElementById("sourceTierRows").addEventListener("click", event => {
+      if (event.target.matches("[data-remove-tier]")) event.target.closest(".tier-row").remove();
+    });
+    document.getElementById("newTierRows").addEventListener("click", event => {
+      if (event.target.matches("[data-remove-tier]")) event.target.closest(".tier-row").remove();
+    });
     document.getElementById("runRecalc").addEventListener("click", runRecalc);
     document.getElementById("saveTag").addEventListener("click", saveTagFromSettings);
 
@@ -2814,7 +2961,10 @@
     window.deleteTag = deleteTag;
 
     clearRecipeForm();
+    addTierRow("source");
+    addTierRow("new");
     renderAll();
+    updateRecalcVisibility();
   </script>
 </body>
 </html>
